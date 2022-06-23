@@ -577,7 +577,7 @@ def GetLocalIp():
         return ipaddress
     except:
         try:
-            url = GetConfigValue('home') + '/Api/getIpAddress'
+            url = 'http://ipinfo.io/ip'
             return HttpGet(url)
         except:
             return GetHost()
