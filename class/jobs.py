@@ -171,8 +171,6 @@ def control_init():
     if os.path.exists("/www/server/mysql"):
         public.ExecShell("chown mysql:mysql /etc/my.cnf;chmod 600 /etc/my.cnf")
     public.ExecShell("rm -rf /www/server/panel/temp/*")
-    if not public.is_debug():
-        public.ExecShell("rm -f /www/server/panel/class/pluginAuth.py")
     stop_path = '/www/server/stop'
     if not os.path.exists(stop_path):
         os.makedirs(stop_path)

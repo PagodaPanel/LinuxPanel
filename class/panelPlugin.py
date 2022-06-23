@@ -1301,7 +1301,6 @@ class panelPlugin:
     def get_index_list(self,get=None):
         softList = self.get_cloud_list(get)['list']
         public.run_thread(self.get_cloud_list_status,args=(get,))
-        public.run_thread(self.is_verify_unbinding,args=(get,))
         if not softList:
             get.force = 1
             softList = self.get_cloud_list(get)['list']

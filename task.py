@@ -898,25 +898,14 @@ def main():
     # p.setDaemon(True)
     p.start()
 
-    p = threading.Thread(target=update_software_list)
-    # p.setDaemon(True)
-    p.start()
-
     p = threading.Thread(target=send_mail_time)
     # p.setDaemon(True)
     p.start()
 
-    p = threading.Thread(target=check_files_panel)
-    # p.setDaemon(True)
-    p.start()
     import panelTask
     task_obj = panelTask.bt_task()
     task_obj.not_web = True
     p = threading.Thread(target=task_obj.start_task)
-    # p.setDaemon(True)
-    p.start()
-
-    p = threading.Thread(target=check_panel_msg)
     # p.setDaemon(True)
     p.start()
 
