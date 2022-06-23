@@ -679,6 +679,55 @@ def get_timeout(url,timeout=3):
 def get_url(timeout = 0.5):
     return 'https://download.bt.cn'
 
+    import json
+    try:
+        pkey = 'node_url'
+        node_url =  cache_get(pkey)
+        if node_url: return node_url
+        nodeFile = 'data/node.json'
+        node_list = json.loads(readFile(nodeFile))
+        mnode1 = []
+        mnode2 = []
+        mnode3 = []
+        new_node_list = {}
+        for node in node_list:
+            node['net'],node['ping'] = get_timeout(node['protocol'] + node['address'] + ':' + node['port'] + '/net_test',1)
+            new_node_list[node['address']] = node['ping']
+            if not node['ping']: continue
+            if node['ping'] < 100:      #当响应时间<100ms且可用带宽大于1500KB时
+                if node['net'] > 1500:
+                    mnode1.append(node)
+                elif node['net'] > 1000:
+                    mnode3.append(node)
+            else:
+                if node['net'] > 1000:  #当响应时间>=100ms且可用带宽大于1000KB时
+                    mnode2.append(node)
+            if node['ping'] < 100:
+                if node['net'] > 3000: break #有节点可用带宽大于3000时，不再检查其它节点
+        if mnode1: #优选低延迟高带宽
+            mnode = sorted(mnode1,key= lambda  x:x['net'],reverse=True)
+        elif mnode3: #备选低延迟，中等带宽
+            mnode = sorted(mnode3,key= lambda  x:x['net'],reverse=True)
+        else: #终选中等延迟，中等带宽
+            mnode = sorted(mnode2,key= lambda  x:x['ping'],reverse=False)
+
+        if not mnode: return 'http://download.bt.cn'
+
+        new_node_keys = new_node_list.keys()
+        for i in range(len(node_list)):
+            if node_list[i]['address'] in new_node_keys:
+                node_list[i]['ping'] = new_node_list[node_list[i]['address']]
+            else:
+                node_list[i]['ping'] = 500
+
+        new_node_list = sorted(node_list,key=lambda x: x['ping'],reverse=False)
+        writeFile(nodeFile,json.dumps(new_node_list))
+        node_url = mnode[0]['protocol'] + mnode[0]['address'] + ':' + mnode[0]['port']
+        cache_set(pkey,node_url,86400)
+        return node_url
+    except:
+        return 'http://download.bt.cn'
+
 
 #过滤输入
 def checkInput(data):

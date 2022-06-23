@@ -19,8 +19,8 @@ except:
 class panelSSL:
     __APIURL = public.GetConfigValue('home') + '/api/Auth'
     __APIURL2 = public.GetConfigValue('home') + '/api/Cert'
-    __BINDURL = 'https://pagod.pages.dev/Auth/GetAuthToken'
-    __CODEURL = '' # https://api.bt.cn/Auth/GetBindCode
+    __BINDURL = 'https://api.bt.cn/Auth/GetAuthToken'
+    __CODEURL = 'https://api.bt.cn/Auth/GetBindCode'
     __UPATH = 'data/userInfo.json'
     __userInfo = None
     __PDATA = None
@@ -1047,7 +1047,8 @@ class panelSSL:
             if not result['status']: return result
 
             if result['data']:
-                result['data']['serverid'] = data['serverid']
+                if result['data']['serverid'] != data['serverid']: # 保存新的serverid
+                    public.writeFile('data/sid.pl',result['data']['serverid'])
                 public.writeFile(self.__UPATH,json.dumps(result['data']))
                 if os.path.exists('data/bind_path.pl'): os.remove('data/bind_path.pl')
                 public.flush_plugin_list()
