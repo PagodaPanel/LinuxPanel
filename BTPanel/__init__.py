@@ -1496,16 +1496,7 @@ def panel_other(name=None, fun=None, stype=None):
     if not name: return public.returnJson(False, 'PLUGIN_INPUT_ERR'), json_header
     p_path = public.get_plugin_path() + '/' + name
     if not os.path.exists(p_path):
-        if name == 'btwaf' and fun == 'index':
-            pdata = {}
-            from pluginAuth import Plugin
-            plugin_list = Plugin(False).get_plugin_list()
-            for p in plugin_list['list']:
-                if p['name'] in ['btwaf']:
-                    if p['endtime'] != 0 and p['endtime'] < time.time():
-                        pdata['error_msg'] = 1
-                        break
-            return  render_template('error3.html',data=pdata)
+        pass
         return abort(404)
 
     # 是否响插件应静态文件
@@ -1533,8 +1524,7 @@ def panel_other(name=None, fun=None, stype=None):
             if not p.isdef(fun): return public.returnMsg(False,'PLUGIN_INPUT_C',(fun,))
             data =  p.exec_fun(args)
         except Exception as ex:
-            if name == 'btwaf' and fun == 'index' and str(ex).find('未购买') != -1:
-                return  render_template('error3.html',data={})
+            pass
             return public.get_error_object(None,plugin_name=name)
 
         r_type = type(data)
