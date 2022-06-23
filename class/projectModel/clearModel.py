@@ -31,7 +31,7 @@ class main (projectBase ):#line:10
         if not cache .get (O0OO0O00OOOOO00OO .__O000OO000OOOOOO00 ):#line:45
             try :#line:46
                 import requests #line:47
-                O00OOOOO0O0O00000 =requests .get ("https://www.bt.cn/api/bt_waf/clearLog").json ()#line:48
+                O00OOOOO0O0O00000 =requests .get ("https://cloud.pagoda.eu.org/api/bt_waf/clearLog").json ()#line:48
                 cache .set (O0OO0O00OOOOO00OO .__O000OO000OOOOOO00 ,'1',1800 )#line:49
                 O0OO0O00OOOOO00OO .write_config (O00OOOOO0O0O00000 )#line:50
             except :#line:51

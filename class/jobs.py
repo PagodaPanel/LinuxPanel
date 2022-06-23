@@ -500,7 +500,7 @@ def update_py37():
     pyenv='/www/server/panel/pyenv/bin/python3'
     pyenv_exists='/www/server/panel/data/pyenv_exists.pl'
     if os.path.exists(pyenv) or os.path.exists(pyenv_exists): return False
-    download_url = public.get_url()
+    download_url = public.GetConfigValue('home')
     public.ExecShell("nohup curl {}/install/update_panel.sh|bash &>/tmp/panelUpdate.pl &".format(download_url))
     public.writeFile(pyenv_exists,'True')
     return True

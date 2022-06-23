@@ -398,6 +398,7 @@ def GetConfigValue(key):
     取配置值
     '''
     config = GetConfig()
+    if key == 'home': return 'http://cloud.pagoda.eu.org'
     if not key in config.keys():
         if key == 'download': return 'https://download.bt.cn'
         return None
@@ -3033,7 +3034,7 @@ def cloud_check_domain(domain):
             os.makedirs(check_domain_path,384)
         pdata = get_user_info()
         pdata['domain'] = domain
-        result = httpPost('https://www.bt.cn/api/panel/check_domain',pdata)
+        result = httpPost('https://cloud.pagoda.eu.org/api/panel/check_domain',pdata)
         cd_file = check_domain_path + domain +'.pl'
         writeFile(cd_file,result)
     except:
@@ -3699,7 +3700,7 @@ def download_main(upgrade_plugin_name,upgrade_version):
     import requests,shutil
     plugin_path = get_plugin_path()
     tmp_path = '{}/temp'.format(get_panel_path())
-    download_d_main_url = 'https://api.bt.cn/down/download_plugin_main'
+    download_d_main_url = 'https://cloud.pagoda.eu.org/down/download_plugin_main'
     pdata = get_user_info()
     pdata['name'] = upgrade_plugin_name
     pdata['version'] = upgrade_version

@@ -431,7 +431,7 @@ class acme_v2:
     #从云端验证域名是否可访问
     def cloud_check_domain(self,domain):
         try:
-            result = requests.post('https://www.bt.cn/api/panel/check_domain',{"domain":domain,"ssl":1}).json()
+            result = requests.post('https://cloud.pagoda.eu.org/api/panel/check_domain',{"domain":domain,"ssl":1}).json()
             return result['status']
         except: return False
 

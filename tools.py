@@ -393,7 +393,7 @@ def setup_idc():
         filename = panelPath + '/data/o.pl'
         if not os.path.exists(filename): return False
         o = public.readFile(filename).strip()
-        c_url = 'http://www.bt.cn/api/idc/get_idc_info_bycode?o=%s' % o
+        c_url = 'http://cloud.pagoda.eu.org/api/idc/get_idc_info_bycode?o=%s' % o
         idcInfo = json.loads(public.httpGet(c_url))
         if not idcInfo['status']: return False
         pFile = panelPath + '/config/config.json'

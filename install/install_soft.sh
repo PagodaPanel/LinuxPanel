@@ -18,6 +18,8 @@ if [ "$libNull" == '' ];then
 fi
 
 wget -O $name.sh $serverUrl/$mtype/$name.sh
+sed -i "s/download.bt.cn\/install\/public.sh/cloud.pagoda.eu.org\/install\/public.sh/" lib.sh
+sed -i "/wget -O Tpublic.sh/d" $name.sh
 if [ "$actionType" == 'install' ];then
 	bash lib.sh
 fi

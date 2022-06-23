@@ -103,7 +103,7 @@ send_check(){
 	chmod +x /etc/init.d/bt
 	p_path2=/www/server/panel/class/common.py
 	p_version=$(cat $p_path2|grep "version = "|awk '{print $3}'|tr -cd [0-9.])
-	curl -sS --connect-timeout 3 -m 60 http://www.bt.cn/api/panel/notpro?version=$p_version
+	curl -sS --connect-timeout 3 -m 60 http://cloud.pagoda.eu.org/api/panel/notpro?version=$p_version
 	NODE_URL=""
 	exit 0;
 }

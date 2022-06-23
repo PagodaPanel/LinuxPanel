@@ -164,7 +164,7 @@ class webshell_check:
     #get_url
     def get_check_url(self):
         try:
-            ret=requests.get(public.GetConfigValue('home') + '/checkWebShell.php').json()
+            ret=requests.get('https://www.bt.cn' + '/checkWebShell.php').json()
             if ret['status']:
                 return ret['url']
             return False

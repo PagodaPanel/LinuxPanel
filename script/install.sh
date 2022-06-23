@@ -220,7 +220,7 @@ do
 	fi
 done
 
-curl http://www.bt.cn/Api/SetupCount?type=Linux
+curl http://cloud.pagoda.eu.org/api/SetupCount?type=Linux
 
 echo "====================================="
 echo -e "\033[32mThe install successful!\033[0m"

@@ -104,7 +104,7 @@ class plugin_deployment:
         try:
             jsonFile = self.__setupPath + '/deployment_list.json'
             if not 'package' in session or not os.path.exists(jsonFile) or hasattr(get,'force'):
-                downloadUrl = 'https://www.bt.cn/api/panel/get_deplist'
+                downloadUrl = 'https://cloud.pagoda.eu.org/api/panel/get_deplist'
                 pdata = public.get_pdata()
                 tmp = json.loads(public.httpPost(downloadUrl,pdata,3))
                 if not tmp: return public.returnMsg(False,'从云端获取失败!')
@@ -267,7 +267,7 @@ class plugin_deployment:
         #下载文件
         if isDownload:
             self.WriteLogs({'name':'正在下载文件 ...','total':0,'used':0,'pre':0,'speed':0})
-            if pinfo['versions'][0]['download']: self.DownloadFile(public.GetConfigValue('home') + '/api/Pluginother/get_file?fname=' + pinfo['versions'][0]['download'], packageZip)
+            if pinfo['versions'][0]['download']: self.DownloadFile('https://www.bt.cn' + '/api/Pluginother/get_file?fname=' + pinfo['versions'][0]['download'], packageZip)
 
         if not os.path.exists(packageZip): return public.returnMsg(False,'文件下载失败!' + packageZip)
 

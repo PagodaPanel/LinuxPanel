@@ -1017,7 +1017,7 @@ var index = {
       shadeClose: false,
       content: '<div class="DrawRecordCon"></div>'
     });
-    $.get('https://www.bt.cn/Api/getUpdateLogs?type=' + bt.os, function (rdata) {
+    $.get('https://cloud.pagoda.eu.org/api/getUpdateLogs?type=' + bt.os, function (rdata) {
       var body = '';
       for (var i = 0; i < rdata.length; i++) {
         body += '<div class="DrawRecord DrawRecordlist">\
