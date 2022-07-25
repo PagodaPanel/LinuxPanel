@@ -330,7 +330,7 @@ case "$1" in
                 	auth_path=$(cat $panel_path/data/admin_path.pl)
                 fi
                 if [ "$address" = "" ];then
-                	address=$(curl -sS --connect-timeout 10 -m 60 https://www.bt.cn/Api/getIpAddress)
+                	address=$(curl -sS --connect-timeout 10 -m 60 https://ipinfo.io/ip)
                 fi
                 pool=http
                 if [ -f $panel_path/data/ssl.pl ];then

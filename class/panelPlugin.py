@@ -189,6 +189,10 @@ class panelPlugin:
         env_py = self.__panel_path + '/pyenv/bin'
         if not os.path.exists(env_py): return False
         temp_file = public.readFile(filename)
+        # Prepared for self-deploy server
+        #temp_file = temp_file.replace('wget -O Tpublic.sh', '#wget -O Tpublic.sh')
+        #temp_file = temp_file.replace('\cp -rpa Tpublic.sh', '#\cp -rpa Tpublic.sh')
+        #temp_file = temp_file.replace('download.bt.cn/install/public.sh', 'www.example.com/install/public.sh')
         env_path=['PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin']
         rep_path=['PATH={}/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin'.format(env_py+":")]
         for index_key in range(len(env_path)):
@@ -1871,7 +1875,7 @@ class panelPlugin:
             public.ExecShell(r"\cp  -a -r " + srcIcon + " " + iconFile)
         else:
             if downFile:
-                public.ExecShell('wget -O ' + iconFile + ' ' + public.GetConfigValue('home') + downFile + " &")
+                public.ExecShell('wget -O ' + iconFile + ' ' + 'https://www.bt.cn' + downFile + " &")
             else:
                 public.ExecShell('wget -O ' + iconFile + ' ' + public.get_url() + '/install/plugin/' + name + '/icon.png' + " &")
         cache.set(skey,1,86400)
