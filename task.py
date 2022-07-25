@@ -876,10 +876,8 @@ def run_thread():
         "panel_status": panel_status,
         "restart_panel_service": restart_panel_service,
         "check_panel_ssl": check_panel_ssl,
-        "update_software_list": update_software_list,
         "send_mail_time": send_mail_time,
         "check_files_panel": check_files_panel,
-        "check_panel_msg": check_panel_msg,
         "push_msg": push_msg
     }
 

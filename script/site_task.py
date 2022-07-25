@@ -243,4 +243,3 @@ for site in edateSites:
         SetStatus(get)
 oldEdate = mEdate
 public.writeFile('/www/server/panel/data/edate.pl',mEdate)
-logs_analysis()

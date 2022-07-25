@@ -357,24 +357,6 @@ var index = {
     setTimeout(function () { _this.iostat.init() }, 500);
     setTimeout(function () { _this.get_warning_list() }, 600);
     setTimeout(function () { _this.interval.start() }, 700);
-    setTimeout(function () {
-      bt.system.check_update(function (rdata) {
-        index.consultancy_services(rdata.msg.adviser);
-
-        if (rdata.status !== false) {
-          var res = rdata.msg, beta = res.beta,is_beta = res.is_beta,ignore = res.ignore;
-          if(ignore.indexOf(is_beta?beta.version:res.version) == -1) index.check_update(true) // 判断自动升级
-          $('#toUpdate a').html('更新<i style="display: inline-block; color: red; font-size: 40px;position: absolute;top: -35px; font-style: normal; right: -8px;">.</i>');
-          $('#toUpdate a').css("position", "relative");
-
-        }
-        if (rdata.msg.is_beta === 1) {
-          $('#btversion').prepend('<span style="margin-right:5px;">Beta</span>');
-          $('#btversion').append('<a class="btlink" href="https://www.bt.cn/bbs/forum-39-1.html" target="_blank">  [找Bug奖宝塔币]</a>');
-        }
-
-      }, false)
-    }, 700)
   },
   get_server_info: function (info) {
     // bt.system.get_total(function (info){
@@ -1362,8 +1344,7 @@ index.consultancy_services()
 //setTimeout(function () { index.get_cloud_list() }, 800);
 
 product_recommend.init(function(){
-  index.get_product_status(function(){
-    index.recommend_paid_version()
+  index.get_product_status(function(){ 
   });
   index.get_index_list();
 })

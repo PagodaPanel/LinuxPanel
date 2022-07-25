@@ -1,0 +1,8 @@
+panel/.git/*
+panel/config/*
+panel/data/*
+panel/plugin/*
+panel/ssl/*
+panel/__init__.py
+panel/update.lst
+

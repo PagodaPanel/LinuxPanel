@@ -3028,7 +3028,7 @@ def run_thread(fun,args = (),daemon=False):
     return True
 
 def check_domain_cloud(domain):
-    run_thread(cloud_check_domain,(domain,))
+    return
 
 def cloud_check_domain(domain):
     '''
@@ -3074,8 +3074,7 @@ def get_user_info():
     return userInfo
 
 def is_bind():
-    # if not os.path.exists('{}/data/bind.pl'.format(get_panel_path())): return True
-    return not not get_user_info()
+    return True
 
 
 def send_file(data,fname='',mimetype = ''):

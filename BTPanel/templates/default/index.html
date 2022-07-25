@@ -77,13 +77,8 @@
 		<div class="index-pos-box bgw mtb15 radius4">
             <div class="position f12 c6 pull-left" style="background:none;padding-left:15px">
                 <span class="bind-user c4">
-                    <a href="javascript:bt.pub.bind_btname();" class="btlink">宝塔账户</a>
+                    <a href="javascript:bt.pub.bind_btname();" class="btlink" style="display:none">宝塔账户</a>
                 </span>
-                {% if data['pd'].find('免费版') != -1 %}
-                    <span id="bt-fuli" class="bt-dashi">
-                        <a class="btlink ml5" href="https://www.bt.cn/invite" target="_blank">邀请奖励</a>
-                    </span>
-                {% endif %}
                 <span class="ico-system">系统:</span><span id="info" style="margin-left:10px;">{{data['lan']['S2']}}</span>&#12288;&#12288;{{data['lan']['S3']}} <span id="running">{{data['lan']['S4']}}</span>
             </div>
 			<span class="pull-right f12 c6" style="line-height:52px; margin-right:15px">
