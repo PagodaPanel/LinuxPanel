@@ -185,7 +185,7 @@ class send_mail:
             return ipaddress
         except:
             try:
-                url = public.GetConfigValue('home') + '/Api/getIpAddress'
+                url = 'http://ipinfo.io'
                 return public.HttpGet(url)
             except:
                 return public.GetHost()
