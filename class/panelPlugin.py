@@ -189,9 +189,10 @@ class panelPlugin:
         env_py = self.__panel_path + '/pyenv/bin'
         if not os.path.exists(env_py): return False
         temp_file = public.readFile(filename)
-        # Prepared for self-deploy server
-        #temp_file = temp_file.replace('wget -O Tpublic.sh', '#wget -O Tpublic.sh')
-        #temp_file = temp_file.replace('\cp -rpa Tpublic.sh', '#\cp -rpa Tpublic.sh')
+        # Remove force update public.sh
+        temp_file = temp_file.replace('wget -O Tpublic.sh', '#wget -O Tpublic.sh')
+        temp_file = temp_file.replace('\cp -rpa Tpublic.sh', '#\cp -rpa Tpublic.sh')
+        temp_file = temp_file.replace('rm -f Tpublic.sh', '#rm -f Tpublic.sh')
         #temp_file = temp_file.replace('download.bt.cn/install/public.sh', 'www.example.com/install/public.sh')
         env_path=['PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin']
         rep_path=['PATH={}/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin'.format(env_py+":")]
