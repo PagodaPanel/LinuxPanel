@@ -2341,7 +2341,7 @@ cd %s
         '''
         try:
             userInfo = json.loads(public.ReadFile('/www/server/panel/data/userInfo.json'))
-            cloudUrl = 'http://www.bt.cn/api/bt_waf/reportTrojanError'
+            cloudUrl = 'http://pagoda.moetools.net/api/bt_waf/reportTrojanError'
             pdata = {'name':get.filename,'inputfile': public.ReadFile(get.filename), "md5": public.Md5(get.filename),"access_key": userInfo['access_key'], "uid": userInfo['uid']}
             ret = public.httpPost(cloudUrl, pdata)
             return public.returnMsg(True, "提交误报完成")

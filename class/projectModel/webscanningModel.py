@@ -54,7 +54,7 @@ class main (projectBase ):#line:17
         OO00OOO0OO0O0OO00 =panelAuth .panelAuth ().create_serverid (None )#line:104
         OO00OOO0OO0O0OO00 ['url']=O0O0O0OO0OO0O00O0 #line:105
         try :#line:106
-            OOO0OO000O000O0O0 =public .httpPost ("http://www.bt.cn/api/local/boce",OO00OOO0OO0O0OO00 ,10 )#line:107
+            OOO0OO000O000O0O0 =public .httpPost ("http://pagoda.moetools.net/api/local/boce",OO00OOO0OO0O0OO00 ,10 )#line:107
             OOO0OO000O000O0O0 =json .loads (OOO0OO000O000O0O0 )#line:108
             return OOO0OO000O000O0O0 #line:109
         except :#line:110
@@ -209,7 +209,7 @@ class main (projectBase ):#line:17
     def SendWubao (OOOOO00O0O00OO0OO ,OOOOOO00O000O0O0O ):#line:340
         ""#line:345
         O00O0O000OOO000O0 =json .loads (public .ReadFile ('/www/server/panel/data/userInfo.json'))#line:346
-        OO0O00OOOO00OOOO0 ='http://www.bt.cn/api/bt_waf/reportTrojanError'#line:347
+        OO0O00OOOO00OOOO0 ='http://pagoda.moetools.net/api/bt_waf/reportTrojanError'#line:347
         OOOOO00O0O00OO0OO .UpdateWubao (filename =OOOOOO00O000O0O0O .filename )#line:348
         O000OOO00O00OO00O ={'name':OOOOOO00O000O0O0O .filename ,'inputfile':OOOOO00O0O00OO0OO .ReadFile (OOOOOO00O000O0O0O .filename ),"md5":OOOOO00O0O00OO0OO .FileMd5 (OOOOOO00O000O0O0O .filename ),"access_key":O00O0O000OOO000O0 ['access_key'],"uid":O00O0O000OOO000O0 ['uid']}#line:349
         OOO00OO0OO0OO0O0O =public .httpPost (OO0O00OOOO00OOOO0 ,O000OOO00O00OO00O )#line:350

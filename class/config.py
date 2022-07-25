@@ -950,7 +950,7 @@ class config:
                 "access_key":userInfo['access_key'],
                 "panel":1
             }
-            cert_api = 'https://api.bt.cn/bt_cert'
+            cert_api = 'https://pagoda.moetools.net/bt_cert'
             result = json.loads(public.httpPost(cert_api,{'data': json.dumps(pdata)}))
             if 'status' in result:
                 if result['status']:
@@ -2231,10 +2231,10 @@ class config:
             @param node_ip<str> 节点IP
             @return int 节点延迟
         '''
-        if not node_ip: node_ip = "api.bt.cn"
+        if not node_ip: node_ip = "pagoda.moetools.net"
         s_time = time.time()
         import requests
-        headers = {"Host":"api.bt.cn","User-Agent":"BT-Panel"}
+        headers = {"Host":"pagoda.moetools.net","User-Agent":"BT-Panel"}
         try:
             res = requests.get('https://{}'.format(node_ip),headers=headers,timeout=1,verify=False).text
         except:
@@ -2306,20 +2306,7 @@ class config:
             @author hwliang<2022-03-16>
             @return void
         '''
-
-        node_file = '{}/config/api_node.json'.format(public.get_panel_path())
-        if not os.path.exists(node_file): return
-        node_list = json.loads(public.readFile(node_file))
-        node_info = {}
-        for node in node_list:
-            if node['status'] == 1:
-                node_info = node
-                break
-        if not node_info: return
-        public.ExecShell("sed -i '/api.bt.cn/d' /etc/hosts")
-        if not node_info['node_ip']: return
-        public.ExecShell("echo '{} api.bt.cn' >> /etc/hosts".format(node_info['node_ip']))
-
+        return
 
     def set_click_logs(self,get):
         '''

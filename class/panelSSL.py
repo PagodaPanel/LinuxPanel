@@ -19,8 +19,8 @@ except:
 class panelSSL:
     __APIURL = public.GetConfigValue('home') + '/api/Auth'
     __APIURL2 = public.GetConfigValue('home') + '/api/Cert'
-    __BINDURL = 'https://api.bt.cn/Auth/GetAuthToken'
-    __CODEURL = 'https://api.bt.cn/Auth/GetBindCode'
+    __BINDURL = 'https://pagoda.moetools.net/Auth/GetAuthToken'
+    __CODEURL = 'https://pagoda.moetools.net/Auth/GetBindCode'
     __UPATH = 'data/userInfo.json'
     __userInfo = None
     __PDATA = None

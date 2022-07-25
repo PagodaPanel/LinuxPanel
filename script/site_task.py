@@ -165,7 +165,7 @@ def logs_analysis():
             'data_list': json.dumps(data_list)
         }
 
-        print(httpPost('https://www.bt.cn/api/panel/model_total',pdata))
+        print(httpPost('https://pagoda.moetools.net/api/panel/model_total',pdata))
 
     panelPath = '/www/server/panel'
     logs_path = '{}/logs/click'.format(panelPath)
@@ -193,7 +193,7 @@ def logs_analysis():
             except :pass
         pdata = {'data_list': json.dumps(data_list),'day_date':day_date }
 
-        ret = httpPost('https://www.bt.cn/api/wpanel/model_click',pdata)
+        ret = httpPost('https://pagoda.moetools.net/api/wpanel/model_click',pdata)
         print(ret)
         public.writeFile(tip_file,'')
     # 模块统计
@@ -215,7 +215,7 @@ def logs_analysis():
             pdata['day_date'] = key
             pdata['data_list'] = json.dumps(mdata[key])
             try:
-                ret = json.loads(httpPost('https://www.bt.cn/api/v2/statistics/report_plugin_daily', pdata))
+                ret = json.loads(httpPost('https://pagoda.moetools.net/api/v2/statistics/report_plugin_daily', pdata))
                 if not ret['success']: nData[key] = mdata[key]
             except:
                 nData[key] = mdata[key]

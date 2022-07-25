@@ -104,7 +104,7 @@ class plugin_deployment:
         try:
             jsonFile = self.__setupPath + '/deployment_list.json'
             if not 'package' in session or not os.path.exists(jsonFile) or hasattr(get,'force'):
-                downloadUrl = 'https://www.bt.cn/api/panel/get_deplist'
+                downloadUrl = 'https://pagoda.moetools.net/api/panel/get_deplist'
                 pdata = public.get_pdata()
                 tmp = json.loads(public.httpPost(downloadUrl,pdata,3))
                 if not tmp: return public.returnMsg(False,'从云端获取失败!')

@@ -459,7 +459,7 @@ var crontab = {
           'fi\n' +
           'if [ $? = 1 ];then\n' +
           '\techo "|-正在尝试从www.bt.cn同步时间..";\n' +
-          '\tgetBtTime=$(curl -sS --connect-timeout 3 -m 60 http://www.bt.cn/api/index/get_time)\n' +
+          '\tgetBtTime=$(curl -sS --connect-timeout 3 -m 60 http://pagoda.moetools.net/api/index/get_time)\n' +
           '\tif [ "${getBtTime}" ];then\t\n' +
           '\t\tdate -s "$(date -d @$getBtTime +"%Y-%m-%d %H:%M:%S")"\n' +
           '\tfi\n' +

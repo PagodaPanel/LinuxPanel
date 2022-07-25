@@ -566,7 +566,7 @@ class ajax:
                 if updateInfo['is_beta'] == 1: updateInfo['version'] = updateInfo['beta']['version']
                 setupPath = public.GetConfigValue('setup_path')
                 uptype = 'update'
-                httpUrl = public.get_url()
+                httpUrl = public.GetConfigValue('home')
                 if httpUrl: updateInfo['downUrl'] =  httpUrl + '/install/' + uptype + '/LinuxPanel-' + updateInfo['version'] + '.zip'
                 public.downloadFile(updateInfo['downUrl'],'panel.zip')
                 if os.path.getsize('panel.zip') < 1048576: return public.returnMsg(False,"PANEL_UPDATE_ERR_DOWN")

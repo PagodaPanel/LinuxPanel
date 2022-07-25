@@ -393,7 +393,7 @@ def setup_idc():
         filename = panelPath + '/data/o.pl'
         if not os.path.exists(filename): return False
         o = public.readFile(filename).strip()
-        c_url = 'http://www.bt.cn/api/idc/get_idc_info_bycode?o=%s' % o
+        c_url = 'http://pagoda.moetools.net/api/idc/get_idc_info_bycode?o=%s' % o
         idcInfo = json.loads(public.httpGet(c_url))
         if not idcInfo['status']: return False
         pFile = panelPath + '/config/config.json'
@@ -624,7 +624,7 @@ def bt_cli(u_input = 0):
     elif u_input == 15:
         ClearSystem()
     elif u_input == 16:
-        os.system("curl http://download.bt.cn/install/update6.sh|bash")
+        os.system("curl http://pagoda.moetools.net/install/update6.sh|bash")
     elif u_input == 17:
         l_path = '/www/server/panel/data/log_not_gzip.pl'
         if os.path.exists(l_path):
