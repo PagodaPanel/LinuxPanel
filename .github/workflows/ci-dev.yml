@@ -1,0 +1,33 @@
+name: CI (Dev)
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout repository
+        uses: actions/checkout@v3
+
+      -
+        name:
+        run: |
+          mkdir ../panel
+          cp -r ./* ../panel
+          pushd ..
+          zip -r install.zip panel -x panel/update.lst
+          zip -r update.zip panel -x@panel/update.lst
+          popd
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "Dev"
+          tag_name: "beta"
+          files: |
+            ../install.zip
+            ../update.zip
