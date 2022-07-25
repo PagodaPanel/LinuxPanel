@@ -1,10 +1,11 @@
-name: CI
+name: CI (Manual)
 
 on:
-  push:
-    branches:
-      - 7.9.2
-      - 7.9.3
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version'
+        required: true
 
 jobs:
   build:
@@ -12,8 +13,9 @@ jobs:
     steps:
       -
         name: Checkout repository
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.version }}
       -
         name:
         run: |
@@ -27,8 +29,8 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          name: ${{ github.ref }}
-          tag_name: "v${{ github.ref }}"
+          name: ${{ github.event.inputs.version }}
+          tag_name: "v${{ github.event.inputs.version }}"
           files: |
             ../install.zip
             ../update.zip
