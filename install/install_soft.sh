@@ -21,5 +21,8 @@ wget -O $name.sh $serverUrl/$mtype/$name.sh
 if [ "$actionType" == 'install' ];then
 	bash lib.sh
 fi
+
+sed -i "/wget -O Tpublic.sh/d" $name.sh
+
 bash $name.sh $actionType $version
 echo '|-Successify --- 命令已执行! ---'
