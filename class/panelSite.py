@@ -10,7 +10,10 @@
 #------------------------------
 # 网站管理类
 #------------------------------
+from cgi import test
 import io,re,public,os,sys,shutil,json,hashlib,socket,time
+import OpenSSL
+import base64
 try:
     from BTPanel import session
 except:
@@ -967,12 +970,12 @@ set $bt_safe_open "{}/:/tmp/";'''.format(self.sitePath)
             if opid:
                 siteName = public.M('sites').where('id=?',(opid,)).getField('name')
                 if siteName:
-                    return public.returnMsg(False,'指定域名已被网站[{}]绑定过了'.format(siteName))
+                    return public.returnMsg(False,'指定域名[{}]已被网站[{}]绑定过了'.format(get.domain,siteName))
                 sql.where('pid=?',(opid,)).delete()
             opid = public.M('binding').where('domain=?',(get.domain,)).getField('pid')
             if opid:
                 siteName = public.M('sites').where('id=?',(opid,)).getField('name')
-                return public.returnMsg(False,'指定域名已被被网站[{}]的子目录绑定过了!'.format(siteName))
+                return public.returnMsg(False,'指定域名[{}]已被被网站[{}]的子目录绑定过了!'.format(get.domain,siteName))
 
             #写配置文件
             self.NginxDomain(get)
@@ -1693,8 +1696,11 @@ listener SSL443 {
         # Node项目
         if not os.path.exists(file):  file = self.setupPath + '/panel/vhost/nginx/node_' + siteName + '.conf'
         if not os.path.exists(file):  file = self.setupPath + '/panel/vhost/nginx/java_' + siteName + '.conf'
+
         if not os.path.exists(file):  file = self.setupPath + '/panel/vhost/nginx/go_' + siteName + '.conf'
         if not os.path.exists(file):  file = self.setupPath + '/panel/vhost/nginx/other_' + siteName + '.conf'
+
+
         ng_file = file
         conf = public.readFile(file)
 
@@ -1721,12 +1727,17 @@ listener SSL443 {
                     return public.returnMsg(True, 'SITE_SSL_OPEN_SUCCESS')
 
                 conf = conf.replace('#error_page 404/404.html;', sslStr)
+                conf = re.sub(r"\s+\#SSL\-END","\n\t\t#SSL-END",conf)
 
                 # 添加端口
                 rep = "listen.*[\s:]+(\d+).*;"
                 tmp = re.findall(rep, conf)
                 if not public.inArray(tmp, '443'):
-                    listen = re.search(rep,conf).group()
+                    listen_re =  re.search(rep,conf)
+                    if not listen_re:
+                        conf = re.sub(r"server\s*{\s*","server\n{\n\t\tlisten 80;\n\t\t",conf)
+                        listen_re =  re.search(rep,conf)
+                    listen = listen_re.group()
                     versionStr = public.readFile('/www/server/nginx/version.pl')
                     http2 = ''
                     if versionStr:
@@ -1735,8 +1746,8 @@ listener SSL443 {
                     if conf.find('default_server') != -1: default_site = ' default_server'
 
                     listen_ipv6 = ';'
-                    if self.is_ipv6: listen_ipv6 = ";\n\tlisten [::]:443 ssl"+http2+default_site+";"
-                    conf = conf.replace(listen,listen + "\n\tlisten 443 ssl"+http2 + default_site + listen_ipv6)
+                    if self.is_ipv6: listen_ipv6 = ";\n\t\tlisten [::]:443 ssl"+http2+default_site+";"
+                    conf = conf.replace(listen,listen + "\n\t\tlisten 443 ssl"+http2 + default_site + listen_ipv6)
                 shutil.copyfile(file, self.nginx_conf_bak)
 
                 public.writeFile(file, conf)
@@ -1754,17 +1765,18 @@ listener SSL443 {
             file = self.setupPath + '/panel/vhost/apache/java_' + siteName + '.conf'
         is_go_apache = False
         if not os.path.exists(file):
-            is_go_apache = True
-            is_java_apache=False
+            is_go_apache=True
+            is_java_apache = False
             is_node_apache = False
             file = self.setupPath + '/panel/vhost/apache/go_' + siteName + '.conf'
         is_other_apache = False
         if not os.path.exists(file):
-            is_other_apache = True
-            is_java_apache=False
-            is_go_apache = False
+            is_other_apache=True
+            is_go_apache=False
+            is_java_apache = False
             is_node_apache = False
             file = self.setupPath + '/panel/vhost/apache/other_' + siteName + '.conf'
+
         conf = public.readFile(file)
         ap_static_security = self._get_ap_static_security(conf)
         if conf:
@@ -1860,7 +1872,6 @@ listener SSL443 {
                     m = main()
                     project_find = m.get_project_find(siteName)
                     m.set_apache_config(project_find)
-
 
         # OLS
         self.set_ols_ssl(get,siteName)
@@ -1964,6 +1975,7 @@ listener SSL443 {
             file = self.setupPath + '/panel/vhost/nginx/go_'+siteName+'.conf'
         if not os.path.exists(file):
             file = self.setupPath + '/panel/vhost/nginx/other_'+siteName+'.conf'
+
         conf = public.readFile(file)
         if conf:
             rep = "\n\s*#HTTP_TO_HTTPS_START(.|\n){1,300}#HTTP_TO_HTTPS_END"
@@ -1991,10 +2003,12 @@ listener SSL443 {
             file = self.setupPath + '/panel/vhost/nginx/node_'+siteName+'.conf'
         if not os.path.exists(file):
             file = self.setupPath + '/panel/vhost/nginx/java_'+siteName+'.conf'
+
         if not os.path.exists(file):
             file = self.setupPath + '/panel/vhost/nginx/go_'+siteName+'.conf'
         if not os.path.exists(file):
             file = self.setupPath + '/panel/vhost/nginx/other_'+siteName+'.conf'
+
         conf = public.readFile(file)
         if conf:
             if conf.find('HTTP_TO_HTTPS_START') != -1: return True
@@ -2064,6 +2078,7 @@ listener SSL443 {
             file = self.setupPath + '/panel/vhost/apache/go_' + siteName + '.conf'
         if not os.path.exists(file):
             file = self.setupPath + '/panel/vhost/apache/other_' + siteName + '.conf'
+
         conf = public.readFile(file)
         if conf:
             rep = "\n<VirtualHost \*\:443>(.|\n)*<\/VirtualHost>"
@@ -2128,9 +2143,10 @@ listener SSL443 {
         if not os.path.exists(file): file = self.setupPath + '/panel/vhost/' + public.get_webserver() + '/node_' + siteName + '.conf'
 
         if not os.path.exists(file): file = self.setupPath + '/panel/vhost/' + public.get_webserver() + '/java_' + siteName + '.conf'
+
         if not os.path.exists(file): file = self.setupPath + '/panel/vhost/' + public.get_webserver() + '/go_' + siteName + '.conf'
+
         if not os.path.exists(file): file = self.setupPath + '/panel/vhost/' + public.get_webserver() + '/other_' + siteName + '.conf'
-        if not os.path.exists(file): file = self.setupPath + '/panel/vhost/' + public.get_webserver() + '/python_' + siteName + '.conf'
 
         if public.get_webserver() == "openlitespeed":
             file = self.setupPath + '/panel/vhost/' + public.get_webserver() + '/detail/' + siteName + '.conf'
@@ -2184,7 +2200,53 @@ listener SSL443 {
         oid = -1
         if type == 3:
             oid = int(public.readFile(path + '/certOrderId'))
-        return {'status': status,'oid':oid, 'domain': domains, 'key': key, 'csr': csr, 'type': type, 'httpTohttps': toHttps,'cert_data':cert_data,'email':email,"index":index,'auth_type':auth_type}
+        #作者 muluo
+        # return {'status': status,'oid':oid, 'domain': domains, 'key': key, 'csr': csr, 'type': type, 'httpTohttps': toHttps,'cert_data':cert_data,'email':email,"index":index,'auth_type':auth_type}
+        res = {'status': status,'oid':oid, 'domain': domains, 'key': key, 'csr': csr, 'type': type, 'httpTohttps': toHttps,'cert_data':cert_data,'email':email,"index":index,'auth_type':auth_type}
+        res['push'] = self.get_site_push_status(None,siteName ,'ssl')
+        return res
+
+    def get_site_push_status(self, get, siteName=None, stype=None):
+        """
+        @获取网站ssl告警通知状态
+        @param get:
+        @param siteName 网站名称
+        @param stype 类型 ssl
+        """
+        if get:
+            siteName = get.siteName
+            stype = get.stype
+
+        result = {}
+        result['status'] = False
+        try:
+            data = {}
+            try:
+                data = json.loads(public.readFile('{}/class/push/push.json'.format(public.get_panel_path())))
+            except:
+                pass
+
+            if not 'site_push' in data:
+                return result
+
+            ssl_data = data['site_push']
+            for key in ssl_data.keys():
+                if ssl_data[key]['type'] != stype:
+                    continue
+
+                project = ssl_data[key]['project']
+                if project in [siteName, 'all']:
+                    ssl_data[key]['id'] = key
+                    ssl_data[key]['s_module'] = 'site_push'
+
+                    if project == siteName:
+                        return ssl_data[key]
+
+                    if project == 'all':
+                        result = ssl_data[key]
+        except:
+            pass
+        return result
 
     def set_site_status_multiple(self,get):
         '''
@@ -2195,9 +2257,17 @@ listener SSL443 {
         '''
         sites_id = get.sites_id.split(',')
         sites_name = []
+        errors = {}
+        day_time = time.time()
         for site_id in sites_id:
             get.id = site_id
-            get.name = public.M('sites').where("id=?", (site_id,)).getField('name')
+            find = public.M('sites').where("id=?", (site_id,)).find()
+            get.name = find['name']
+
+            if get.status == '1':
+                if find['edate'] != '0000-00-00' and public.to_date("%Y-%m-%d",find['edate']) < day_time:
+                    errors[get.name] = "失败,已到期"
+                    continue
             sites_name.append(get.name)
             if get.status == '1':
                 self.SiteStart(get,multiple=1)
@@ -2205,9 +2275,9 @@ listener SSL443 {
                 self.SiteStop(get,multiple=1)
         public.serviceReload()
         if get.status == '1':
-            return {'status': True, 'msg': '开启网站 [ {} ] 成功'.format(','.join(sites_name)), 'error': {}, 'success': sites_name}
+            return {'status': True, 'msg': '开启网站 [ {} ] 成功'.format(','.join(sites_name)), 'error': errors, 'success': sites_name}
         else:
-            return {'status': True, 'msg': '停止网站 [ {} ] 成功'.format(','.join(sites_name)), 'error': {}, 'success':sites_name}
+            return {'status': True, 'msg': '停止网站 [ {} ] 成功'.format(','.join(sites_name)), 'error': errors, 'success':sites_name}
 
 
     #启动站点
@@ -4144,12 +4214,6 @@ location ^~ %s
             get.siteName = get.siteName.replace('node_', '')
         if get.siteName.find('java_') == 0:
             get.siteName = get.siteName.replace('java_', '')
-        if get.siteName.find('go_') == 0:
-            get.siteName = get.siteName.replace('go_', '')
-        if get.siteName.find('other_') == 0:
-            get.siteName = get.siteName.replace('other_', '')
-        if get.siteName.find('python_') == 0:
-            get.siteName = get.siteName.replace('python_', '')
         rewriteList = {}
         ws = public.get_webserver()
         if ws == "openlitespeed":
@@ -4455,7 +4519,10 @@ location ^~ %s
 
         self.CloseHasPwd(get)
         filename = public.GetConfigValue('setup_path') + '/pass/' + get.siteName + '.pass'
-        passconf = get.username + ':' + public.hasPwd(get.password)
+        try:
+            passconf = get.username + ':' + public.hasPwd(get.password)
+        except:
+            return public.returnMsg(False,"加密密码错误，前两位请不要使用特殊符号！")
 
         if get.siteName == 'phpmyadmin':
             get.configFile = self.setupPath + '/nginx/conf/nginx.conf'
@@ -4947,8 +5014,12 @@ location ^~ %s
             else:
 
                 if conf.find('SECURITY-START') != -1:
-                    rep = "\s{0,4}#SECURITY-START(\n|.){1,500}#SECURITY-END\n?"
+                    # 先替换域名部分，防止域名过多导致替换失败
+                    rep = "\s+valid_referers.+"
                     conf = re.sub(rep,'',conf)
+                    # 再替换配置部分
+                    rep = "\s+#SECURITY-START(\n|.){1,500}#SECURITY-END\n?"
+                    conf = re.sub(rep,'\n',conf)
                     public.WriteLog('网站管理','站点['+get.name+']已关闭防盗链设置!')
                 else:
                     return_rule = 'return 404'
@@ -5033,10 +5104,17 @@ RewriteRule \.(BTPFILE)$    /404.html   [R,NC]
             public.ExecShell('rm -f {}'.format(file))
         public.serviceReload()
         return public.returnMsg(True,'SET_SUCCESS')
-
     # xss 防御
     def xsssec(self,text):
-        return text.replace('<', '&lt;').replace('>', '&gt;')
+        replace_list = {
+            "<":"＜",
+            ">":"＞",
+            "'":"＇",
+            '"':"＂",
+        }
+        for k,v in replace_list.items():
+            text = text.replace(k,v)
+        return public.xssencode2(text)
 
     #取网站日志
     def GetSiteLogs(self,get):
@@ -5060,7 +5138,7 @@ RewriteRule \.(BTPFILE)$    /404.html   [R,NC]
         else:
             logPath = '/www/wwwlogs/' + get.siteName + '_ols.error_log'
         if not os.path.exists(logPath): return public.returnMsg(False,'日志为空')
-        return public.returnMsg(True,public.GetNumLines(logPath,1000))
+        return public.returnMsg(True,self.xsssec(public.GetNumLines(logPath,1000)))
 
     #取网站分类
     def get_site_types(self,get):
@@ -5078,7 +5156,7 @@ RewriteRule \.(BTPFILE)$    /404.html   [R,NC]
         type_sql = public.M('site_types')
         if type_sql.count() >= 10: return public.returnMsg(False,'最多添加10个分类!')
         if type_sql.where('name=?',(get.name,)).count()>0: return public.returnMsg(False,"指定分类名称已存在!")
-        type_sql.add("name",(public.xssencode(get.name),))
+        type_sql.add("name",(public.xssencode2(get.name),))
         return public.returnMsg(True,'添加成功!')
 
     #删除网站分类
@@ -5446,8 +5524,263 @@ RewriteRule \.(BTPFILE)$    /404.html   [R,NC]
             return True
         return False
 
+    def get_upload_ssl_list(self, get):
+        """
+        @获取上传证书列表
+        @siteName string 网站名称
+        """
+        siteName = get['siteName']
+        path = '{}/vhost/upload_ssl/{}'.format(public.get_panel_path(), siteName)
+        if not os.path.exists(path): os.makedirs(path)
 
+        res = []
+        for filename in os.listdir(path):
+            try:
+                filename = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(filename)))
+                res.append(filename)
+            except:
+                pass
+        return res
 
+    # 获取指定证书基本信息
+    def get_cert_init(self, cert_data, ssl_info=None):
+        """
+        @获取指定证书基本信息
+        @cert_data string 证书数据
+        @ssl_info dict 证书信息
+        """
+        try:
+            result = {}
+            if ssl_info and ssl_info['ssl_type'] == 'pfx':
+                x509 = self.__check_pfx_pwd(cert_data, ssl_info['pwd'])[0]
+            else:
+                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_data)
+            # 取产品名称
+            issuer = x509.get_issuer()
+            result['issuer'] = ''
+            if hasattr(issuer, 'CN'):
+                result['issuer'] = issuer.CN
+            if not result['issuer']:
+                is_key = [b'0', '0']
+                issue_comp = issuer.get_components()
+                if len(issue_comp) == 1:
+                    is_key = [b'CN', 'CN']
+                for iss in issue_comp:
+                    if iss[0] in is_key:
+                        result['issuer'] = iss[1].decode()
+                        break
+            # 取到期时间
+            result['notAfter'] = self.strf_date(
+                bytes.decode(x509.get_notAfter())[:-1])
+            # 取申请时间
+            result['notBefore'] = self.strf_date(
+                bytes.decode(x509.get_notBefore())[:-1])
+            # 取可选名称
+            result['dns'] = []
+            for i in range(x509.get_extension_count()):
+                s_name = x509.get_extension(i)
+                if s_name.get_short_name() in [b'subjectAltName', 'subjectAltName']:
+                    s_dns = str(s_name).split(',')
+                    for d in s_dns:
+                        result['dns'].append(d.split(':')[1])
+            subject = x509.get_subject().get_components()
+
+            # 取主要认证名称
+            if len(subject) == 1:
+                result['subject'] = subject[0][1].decode()
+            else:
+                if len(result['dns']) > 0:
+                    result['subject'] = result['dns'][0]
+                else:
+                    result['subject'] = '';
+            return result
+        except:
+            return False
+
+    def strf_date(self, sdate):
+        """
+        @转换证书时间
+        """
+        return time.strftime('%Y-%m-%d', time.strptime(sdate, '%Y%m%d%H%M%S'))
+
+    def check_ssl_endtime(self, data, ssl_info=None):
+        """
+        @检查证书是否有效(证书最高有效期不超过1年)
+        @data string 证书数据
+        @ssl_info dict 证书信息
+        """
+        info = self.get_cert_init(data, ssl_info)
+        if info:
+            end_time = time.mktime(time.strptime(info['notAfter'], "%Y-%m-%d"))
+            start_time = time.mktime(time.strptime(info['notBefore'], "%Y-%m-%d"))
+
+            days = int((end_time - start_time) / 86400)
+            if days < 400:  # 1年有效期+1个月续签时间
+                return data
+        return False
+
+    # 证书转为pkcs12
+    def dump_pkcs12(self, key_pem=None, cert_pem=None, ca_pem=None, friendly_name=None):
+        """
+        @证书转为pkcs12
+        @key_pem string 私钥数据
+        @cert_pem string 证书数据
+        @ca_pem string 可选的CA证书数据
+        @friendly_name string 可选的证书名称
+        """
+        p12 = OpenSSL.crypto.PKCS12()
+        if cert_pem:
+            x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_pem.encode())
+            p12.set_certificate(x509)
+        if key_pem:
+            p12.set_privatekey(OpenSSL.crypto.load_privatekey(
+                OpenSSL.crypto.FILETYPE_PEM, key_pem.encode()))
+        if ca_pem:
+            p12.set_ca_certificates((OpenSSL.crypto.load_certificate(
+                OpenSSL.crypto.FILETYPE_PEM, ca_pem.encode()),))
+        if friendly_name:
+            p12.set_friendlyname(friendly_name.encode())
+        return p12
+
+    def download_cert(self, get):
+        """
+        @下载证书
+        @get dict 请求参数
+            siteName string 网站名称
+            ssl_type string 证书类型
+            key string 密钥
+            pem string 证书数据
+            pwd string 证书密码
+        """
+        pem = get['pem']
+        siteName = get['siteName']
+        ssl_type = get['ssl_type']
+
+        rpath = '{}/temp/ssl/'.format(public.get_panel_path())
+        if os.path.exists(rpath): shutil.rmtree(rpath)
+
+        ca_list = []
+        path = '{}/{}_{}'.format(rpath, siteName, int(time.time()))
+        if ssl_type == 'pfx':
+            res = self.__check_pfx_pwd(base64.b64decode(pem), get['pwd'])
+            p12 = res[1];
+            x509 = res[0];
+            get['pwd'] = res[2]
+            print(get['pwd'])
+            ca_list = []
+            for x in p12.get_ca_certificates():
+                ca_list.insert(0, OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, x).decode().strip())
+            ca_cert = '\n'.join(ca_list)
+            key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, p12.get_privatekey()).decode().strip()
+            domain_cert = OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, x509).decode().strip()
+        else:
+            key = get['key']
+            domain_cert = pem.split('-----END CERTIFICATE-----')[0] + "-----END CERTIFICATE-----\n"
+            ca_cert = pem.replace(domain_cert, '')
+
+            p12 = self.dump_pkcs12(key, '{}\n{}'.format(domain_cert.strip(), ca_cert), ca_cert)
+
+        for x in ['IIS', 'Apache', 'Nginx', '其他证书']:
+            d_file = '{}/{}'.format(path, x)
+            if not os.path.exists(d_file): os.makedirs(d_file)
+
+            if x == 'IIS':
+                public.writeFile2(d_file + '/fullchain.pfx', p12.export(), 'wb+')
+                public.writeFile(d_file + '/password.txt', get['pwd'])
+            elif x == 'Apache':
+                public.writeFile(d_file + '/privkey.key', key)
+                public.writeFile(d_file + '/root_bundle.crt', ca_cert)
+                public.writeFile(d_file + '/domain.crt', domain_cert)
+            else:
+                public.writeFile(d_file + '/privkey.key', key)
+                public.writeFile(d_file + '/fullchain.pem', '{}\n{}'.format(domain_cert.strip(), ca_cert))
+
+        flist = []
+        public.get_file_list(path, flist)
+
+        zfile = '{}/{}.zip'.format(rpath, os.path.basename(path))
+        import zipfile
+        f = zipfile.ZipFile(zfile, 'w', zipfile.ZIP_DEFLATED)
+        for item in flist:
+            s_path = item.replace(path, '')
+            if s_path: f.write(item, s_path)
+        f.close()
+
+        return public.returnMsg(True, zfile);
+
+    def check_ssl_info(self, get):
+        """
+        @解析证书信息
+        @get dict 请求参数
+            path string 上传文件路径
+        """
+        path = get['path']
+        if not os.path.exists(path):
+            return public.returnMsg(False, '查询失败，不存在的地址')
+
+        info = {'root': '', 'cert': '', 'pem': '', 'key': ''}
+        ssl_info = {'pwd': None, 'ssl_type': None}
+        for filename in os.listdir(path):
+            filepath = '{}/{}'.format(path, filename)
+            ext = filename[-4:]
+            if ext == '.pfx':
+                ssl_info['ssl_type'] = 'pfx'
+
+                f = open(filepath, 'rb')  # pfx为二进制文件
+                info['pem'] = f.read()
+
+            else:
+                data = public.readFile(filepath)
+                if filename.find('password') >= 0:  # 取pfx密码
+                    ssl_info['pwd'] = re.search('([a-zA-Z0-9]+)', data).groups()[0]
+                    continue
+
+                if len(data) < 1024:
+                    continue
+
+                if data.find('PRIVATE KEY') >= 0:
+                    info['key'] = data  # 取key
+
+                if ext == '.pem':
+                    if self.check_ssl_endtime(data):
+                        info['pem'] = data
+                else:
+                    if data.find('BEGIN CERTIFICATE') >= 0:
+                        if not info['root']:
+                            info['root'] = data
+                        else:
+                            info['cert'] = data
+
+        if ssl_info['ssl_type'] == 'pfx':
+            info['pem'] = self.check_ssl_endtime(info['pem'], ssl_info)
+            if info['pem']:
+                info['pem'] = base64.b64encode(info['pem'])
+                info['key'] = True
+        else:
+            if not info['pem']:
+                # 确认ca证书和域名证书顺序
+                info['pem'] = self.check_ssl_endtime(info['root'] + "\n" + info['cert'], ssl_info)
+                if not info['pem']:
+                    info['pem'] = self.check_ssl_endtime(info['cert'] + "\n" + info['root'], ssl_info)
+
+        if info['key'] and info['pem']:
+            return {'key': info['key'], 'pem': info['pem'], 'ssl_type': ssl_info['ssl_type'], 'pwd': ssl_info['pwd']}
+        return False
+
+    def __check_pfx_pwd(self, data, pwd):
+        """
+        @检测pfx证书密码
+        @data string pfx证书内容
+        @pwd string 密码
+        """
+        try:
+            p12 = OpenSSL.crypto.load_pkcs12(data, pwd)
+            x509 = p12.get_certificate()
+        except:
+            pwd = re.search('([a-zA-Z0-9]+)', pwd).groups()[0]
+            p12 = OpenSSL.crypto.load_pkcs12(data, pwd)
+            x509 = p12.get_certificate()
+        return [x509, p12, pwd]
 
 
 

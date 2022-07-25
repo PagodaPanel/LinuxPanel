@@ -181,8 +181,8 @@ class data:
         '''
         res = {'size':0 ,'used':0 }
         try:
-            from projectModel.quotaModel import main
-            quota_info =  main().get_quota_path_list(get_path = path)
+            import PluginLoader
+            quota_info =  PluginLoader.module_run('quota','get_quota_path',path)
             if isinstance(quota_info,dict):
                 return quota_info
             return res
@@ -197,8 +197,8 @@ class data:
         '''
         res = {'size':0 ,'used':0 }
         try:
-            from projectModel.quotaModel import main
-            quota_info = main().get_quota_mysql_list(get_name = db_name)
+            import PluginLoader
+            quota_info =  PluginLoader.module_run('quota','get_quota_mysql',db_name)
             if isinstance(quota_info,dict):
                 return quota_info
             return res
@@ -373,6 +373,11 @@ class data:
                     where += " AND sid='{}'".format(int(get.sid))
                 else:
                     where = "sid='{}'".format(int(get.sid))
+
+            if where:
+                where += ' and type="MySQL"'
+            else:
+                where = 'type = "MySQL"'
 
         field = self.GetField(get.table)
         #实例化数据库对象

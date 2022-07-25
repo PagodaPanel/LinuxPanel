@@ -27,7 +27,7 @@ class panelSetup:
             if ua.find('spider') != -1 or g.ua.find('bot') != -1:
                 return abort(403)
 
-        g.version = '7.9.2'
+        g.version = '7.9.3'
         g.title = public.GetConfigValue('title')
         g.uri = request.path
         g.debug = os.path.exists('data/debug.pl')
@@ -193,7 +193,6 @@ class panelAdmin(panelSetup):
             # 标记新的会话过期时间
             session['session_timeout'] = time.time() + public.get_session_timeout()
         except:
-            public.WriteLog('登录检查', public.get_error_info())
             session.clear()
             return redirect('/login')
 

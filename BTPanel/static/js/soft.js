@@ -171,7 +171,7 @@ var soft = {
           } else if(webTypeCache == 'ols' && distribution.indexOf('centos') == -1 && item.name.indexOf('php-8.1') >= 0){
             click_opt = ' title="不兼容此版本"';
           }
-          return '<span ' + click_opt + ' ' + sStyle + ' ><img ' + (item.type === 10 ? 'style="height:20px;width:22px"' : '') + ' src="/static/img/soft_ico/ico-' + fName + '.png">' + item.title + ' ' + version + (item.is_beta ? '-<span style="color:#FC6D26">[测试版]</span>' : '') + '</span>';
+          return '<span ' + click_opt + ' ' + sStyle + ' ><img ' + (item.type === 10 ? 'style="height:20px;width:22px"' : '') + ' src="/static/img/soft_ico/ico-' + fName + '.png">' + (!is_php || !item.version?item.title:'PHP-'+ item.version) + ' ' + version + (item.is_beta ? '-<span style="color:#FC6D26">[测试版]</span>' : '') + '</span>';
         }
       },
         {
@@ -3472,7 +3472,7 @@ function AddSite(codename, title) {
     time: 0,
     shade: [0.3, "#000"]
   })
-  var data = $("#addweb").serialize() + "&port=" + Webport + "&webname=" + domain + '&ftp=false&sql=true&address=localhost&codeing=utf8&version=' + php_version;
+  var data = $("#addweb").serialize() + "&port=" + Webport + "&webname=" + domain + '&ftp=false&sql=true&address=localhost&codeing=utf8mb4&version=' + php_version;
   $.post('/site?action=AddSite', data, function (ret) {
     layer.close(loadT)
     if (!ret.siteStatus) {

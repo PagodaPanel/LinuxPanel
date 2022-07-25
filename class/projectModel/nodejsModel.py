@@ -1298,6 +1298,7 @@ echo $! > {pid_file}
             n+=1
         if not os.path.exists(pid_file):
             p = '\n'.join(p)
+            public.writeFile(log_file,p,"a+")
             if p.find('[Errno 0]') != -1:
                 if os.path.exists('{}/bt_security'.format(public.get_plugin_path())):
                     return public.return_error('启动命令被【堡塔防入侵】拦截，请关闭{}用户的防护'.format(project_find['project_config']['run_user']))
@@ -1369,9 +1370,11 @@ cd {}
         res = self.start_project(get)
         if not res['status']: return res
         return public.return_data(True, '重启成功')
+
     # xss 防御
     def xsssec(self,text):
         return text.replace('<', '&lt;').replace('>', '&gt;')
+
 
     def get_project_log(self,get):
         '''
@@ -1532,8 +1535,10 @@ cd {}
             @param p: Process<进程对像>
             @return list
         '''
+
         skey = "io_speed_{}".format(p.pid)
         old_pio = cache.get(skey)
+        if not hasattr(p,'io_counters'): return 0,0
         pio = p.io_counters()
         if not old_pio:
             cache.set(skey,[pio,time.time()],3600)

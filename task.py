@@ -22,6 +22,10 @@ sys.path.insert(0, "/www/server/panel/class/")
 import time
 import public
 import db
+import threading
+import panelTask
+task_obj = panelTask.bt_task()
+task_obj.not_web = True
 global pre, timeoutCount, logPath, isTask, oldEdate, isCheck
 pre = 0
 timeoutCount = 0
@@ -30,6 +34,7 @@ oldEdate = None
 logPath = '/tmp/panelExec.log'
 isTask = '/tmp/panelTask.pl'
 python_bin = None
+thread_dict = {}
 
 def get_python_bin():
     global python_bin
@@ -130,48 +135,48 @@ def ExecShell(cmdstring, cwd=None, timeout=None, shell=True):
 
 # 任务队列
 def startTask():
-    global isTask,logPath
-    try:
-        while True:
-            try:
-                if os.path.exists(isTask):
-                    with db.Sql() as sql:
-                        sql.table('tasks').where(
-                            "status=?", ('-1',)).setField('status', '0')
-                        taskArr = sql.table('tasks').where("status=?", ('0',)).field(
-                            'id,type,execstr').order("id asc").select()
-                        for value in taskArr:
-                            start = int(time.time())
-                            if not sql.table('tasks').where("id=?", (value['id'],)).count():
-                                continue
-                            sql.table('tasks').where("id=?", (value['id'],)).save(
-                                'status,start', ('-1', start))
-                            if value['type'] == 'download':
-                                argv = value['execstr'].split('|bt|')
-                                DownloadFile(argv[0], argv[1])
-                            elif value['type'] == 'execshell':
-                                # ExecShell(value['execstr'])
-                                os.system("{} &> {}".format(value['execstr'],logPath))
-                            end = int(time.time())
-                            sql.table('tasks').where("id=?", (value['id'],)).save(
-                                'status,end', ('1', end))
-                            if(sql.table('tasks').where("status=?", ('0')).count() < 1):
-                                if os.path.exists(isTask):
-                                    os.remove(isTask)
-                                #ExecShell('rm -f ' + isTask)
-                        sql.close()
-                        taskArr = None
-            except:
-                pass
-            time.sleep(2)
-    except Exception as ex:
-        logging.info(ex)
-        time.sleep(60)
-        startTask()
+    global isTask,logPath,thread_dict
+    tip_file = '/dev/shm/.panelTask.pl'
+    n = 0
+    while 1:
+        try:
+            if os.path.exists(isTask):
+                with db.Sql() as sql:
+                    sql.table('tasks').where(
+                        "status=?", ('-1',)).setField('status', '0')
+                    taskArr = sql.table('tasks').where("status=?", ('0',)).field('id,type,execstr').order("id asc").select()
+                    for value in taskArr:
+                        start = int(time.time())
+                        if not sql.table('tasks').where("id=?", (value['id'],)).count():
+                            public.writeFile(tip_file, str(int(time.time())))
+                            continue
+                        sql.table('tasks').where("id=?", (value['id'],)).save('status,start', ('-1', start))
+                        if value['type'] == 'download':
+                            argv = value['execstr'].split('|bt|')
+                            DownloadFile(argv[0], argv[1])
+                        elif value['type'] == 'execshell':
+                            ExecShell(value['execstr'])
+                        end = int(time.time())
+                        sql.table('tasks').where("id=?", (value['id'],)).save('status,end', ('1', end))
+                        if(sql.table('tasks').where("status=?", ('0')).count() < 1):
+                            if os.path.exists(isTask):
+                                os.remove(isTask)
+                    sql.close()
+                    taskArr = None
+            public.writeFile(tip_file, str(int(time.time())))
+
+            # 线程检查
+            n+=1
+            if n > 60:
+                run_thread()
+                n = 0
+        except:
+            pass
+        time.sleep(2)
+
+
 
 # 网站到期处理
-
-
 def siteEdate():
     global oldEdate
     try:
@@ -183,8 +188,7 @@ def siteEdate():
         if oldEdate == mEdate:
             return False
         oldEdate = mEdate
-        os.system(get_python_bin() +
-                  " /www/server/panel/script/site_task.py > /dev/null")
+        os.system("nohup " + get_python_bin() + " /www/server/panel/script/site_task.py > /dev/null 2>&1 &")
 
     except Exception as ex:
         logging.info(ex)
@@ -515,7 +519,7 @@ def check502Task():
 
 # MySQL配额检查
 def mysql_quota_check():
-    os.system(get_python_bin() +" /www/server/panel/script/mysql_quota.py > /dev/null")
+    os.system("nohup " + get_python_bin() +" /www/server/panel/script/mysql_quota.py > /dev/null 2>&1 &")
 
 # session过期处理
 def sess_expire():
@@ -550,7 +554,7 @@ def check_panel_ssl():
             if not lets_info:
                 time.sleep(3600)
                 continue
-            os.system(get_python_bin() + " /www/server/panel/script/panel_ssl_task.py > /dev/null")
+            os.system("nohup " + get_python_bin() + " /www/server/panel/script/panel_ssl_task.py > /dev/null 2>&1 &")
             time.sleep(3600)
     except Exception as e:
         public.writeFile("/tmp/panelSSL.pl", str(e), "a+")
@@ -588,7 +592,7 @@ def service_panel(action='reload'):
     if not os.path.exists('/www/server/panel/init.sh'):
         update_panel()
     else:
-        os.system("bash /www/server/panel/init.sh {} &".format(action))
+        os.system("nohup bash /www/server/panel/init.sh {} > /dev/null 2>&1 &".format(action))
 
 # 重启面板服务
 def restart_panel_service():
@@ -605,17 +609,20 @@ def restart_panel_service():
 
 # 取面板pid
 def get_panel_pid():
-    pid = ReadFile('/www/server/panel/logs/panel.pid')
-    if pid:
-        return int(pid)
-    for pid in pids():
-        try:
-            p = Process(pid)
-            n = p.cmdline()[-1]
-            if n.find('runserver') != -1 or n.find('BT-Panel') != -1:
-                return pid
-        except:
-            pass
+    try:
+        pid = ReadFile('/www/server/panel/logs/panel.pid')
+        if pid:
+            return int(pid)
+        for pid in pids():
+            try:
+                p = Process(pid)
+                n = p.cmdline()[-1]
+                if n.find('runserver') != -1 or n.find('BT-Panel') != -1:
+                    return pid
+            except:
+                pass
+    except:
+        pass
     return None
 
 
@@ -647,7 +654,7 @@ def HttpGet(url, timeout=6, headers={}):
 def send_mail_time():
     while True:
         try:
-            os.system(get_python_bin() +" /www/server/panel/script/mail_task.py > /dev/null")
+            os.system("nohup " + get_python_bin() +" /www/server/panel/script/mail_task.py > /dev/null 2>&1 &")
             time.sleep(180)
         except:
             time.sleep(360)
@@ -695,9 +702,15 @@ def check_files_panel():
 def check_panel_msg():
     python_bin = get_python_bin()
     while True:
-        os.system('{} /www/server/panel/script/check_msg.py &'.format(python_bin))
+        os.system('nohup {} /www/server/panel/script/check_msg.py > /dev/null 2>&1 &'.format(python_bin))
         time.sleep(3600)
 
+# 面板推送消息
+def push_msg():
+    python_bin = get_python_bin()
+    while True:
+        os.system('nohup {} /www/server/panel/script/push_msg.py > /dev/null 2>&1 &'.format(python_bin))
+        time.sleep(60)
 
 class process_task:
 
@@ -852,6 +865,29 @@ class process_task:
 
         self.__sql.close()
 
+def run_thread():
+    global thread_dict,task_obj
+    tkeys = thread_dict.keys()
+
+    thread_list = {
+        "start_task": task_obj.start_task,
+        "systemTask": systemTask,
+        "check502Task": check502Task,
+        "panel_status": panel_status,
+        "restart_panel_service": restart_panel_service,
+        "check_panel_ssl": check_panel_ssl,
+        "update_software_list": update_software_list,
+        "send_mail_time": send_mail_time,
+        "check_files_panel": check_files_panel,
+        "check_panel_msg": check_panel_msg,
+        "push_msg": push_msg
+    }
+
+    for skey in thread_list.keys():
+        if not skey in tkeys or not thread_dict[skey].is_alive():
+            thread_dict[skey] = threading.Thread(target=thread_list[skey])
+            thread_dict[skey].setDaemon(True)
+            thread_dict[skey].start()
 
 
 def main():
@@ -877,49 +913,8 @@ def main():
                         datefmt='%Y-%m-%d %H:%M:%S', filename=task_log_file, filemode='a+')
     logging.info('服务已启动')
     time.sleep(5)
-    import threading
-    t = threading.Thread(target=systemTask)
-    # t.setDaemon(True)
-    t.start()
 
-    p = threading.Thread(target=check502Task)
-    # p.setDaemon(True)
-    p.start()
-
-    pl = threading.Thread(target=panel_status)
-    # pl.setDaemon(True)
-    pl.start()
-
-    p = threading.Thread(target=restart_panel_service)
-    # p.setDaemon(True)
-    p.start()
-
-    p = threading.Thread(target=check_panel_ssl)
-    # p.setDaemon(True)
-    p.start()
-
-    p = threading.Thread(target=update_software_list)
-    # p.setDaemon(True)
-    p.start()
-
-    p = threading.Thread(target=send_mail_time)
-    # p.setDaemon(True)
-    p.start()
-
-    p = threading.Thread(target=check_files_panel)
-    # p.setDaemon(True)
-    p.start()
-    import panelTask
-    task_obj = panelTask.bt_task()
-    task_obj.not_web = True
-    p = threading.Thread(target=task_obj.start_task)
-    # p.setDaemon(True)
-    p.start()
-
-    p = threading.Thread(target=check_panel_msg)
-    # p.setDaemon(True)
-    p.start()
-
+    run_thread()
     startTask()
 
 
