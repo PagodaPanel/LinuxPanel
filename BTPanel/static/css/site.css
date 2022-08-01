@@ -15176,6 +15176,17 @@ textarea {
   left: -6px;
 }
 
+.libPay-line-item.proP .ops_msg{
+  margin-left: 50px;
+  line-height: 30px;
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 500;
+}
+.libPay-line-item.proP .ops_msg img {
+  margin-right: 5px;
+}
+
 .libPay-qcode-right {
   border-left: 1px solid #eee;
   margin-left: -1px;

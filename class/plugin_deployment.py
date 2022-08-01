@@ -12,7 +12,10 @@
 #+--------------------------------------------------------------------
 
 import public,json,os,time,sys,re
-from BTPanel import session,cache
+try:
+    from BTPanel import session,cache
+except:
+    pass
 class obj: id=0
 class plugin_deployment:
     __setupPath = 'data'
@@ -25,8 +28,10 @@ class plugin_deployment:
 
     #获取列表
     def GetList(self,get):
-        self.GetCloudList(get)
         jsonFile = self.__panelPath + '/data/deployment_list.json'
+        if not os.path.exists(jsonFile) or hasattr(get,'force'):
+            self.GetCloudList(get)
+
         if not os.path.exists(jsonFile): return public.returnMsg(False,'配置文件不存在!')
         data = {}
         data = self.get_input_list(json.loads(public.readFile(jsonFile)))
@@ -103,15 +108,13 @@ class plugin_deployment:
     def GetCloudList(self,get):
         try:
             jsonFile = self.__setupPath + '/deployment_list.json'
-            if not 'package' in session or not os.path.exists(jsonFile) or hasattr(get,'force'):
-                downloadUrl = 'https://www.bt.cn/api/panel/get_deplist'
-                pdata = public.get_pdata()
-                tmp = json.loads(public.httpPost(downloadUrl,pdata,3))
-                if not tmp: return public.returnMsg(False,'从云端获取失败!')
-                public.writeFile(jsonFile,json.dumps(tmp))
-                session['package'] = True
-                return public.returnMsg(True,'更新成功!')
-            return public.returnMsg(True,'无需更新!')
+            downloadUrl = 'https://www.bt.cn/api/panel/get_deplist'
+            pdata = public.get_pdata()
+            tmp = public.httpPost(downloadUrl,pdata,30)
+            tmp = json.loads(tmp)
+            if not tmp: return public.returnMsg(False,'从云端获取失败!')
+            public.writeFile(jsonFile,json.dumps(tmp))
+            return public.returnMsg(True,'更新成功!')
         except:
             return public.returnMsg(False,'从云端获取失败!')
 

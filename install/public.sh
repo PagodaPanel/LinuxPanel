@@ -76,13 +76,7 @@ GetPackManager
 
 if [ -d "/www/server/phpmyadmin/pma" ];then
 	rm -rf /www/server/phpmyadmin/pma
-	EN_CHECK=$(cat /www/server/panel/config/config.json |grep English)
-	if [ "${EN_CHECK}" ];then
-		curl http://download.bt.cn/install/update6_en.sh|bash
-	else
-		curl http://cdn.jsdelivr.net/gh/PagodaPanel/Pagoda@latest/install/update6.sh|bash
-	fi
-	echo > /www/server/panel/data/restart.pl
+	echo "Please update your panel!"
 fi
 
 if [ ! $NODE_URL ];then

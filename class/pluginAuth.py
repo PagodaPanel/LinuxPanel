@@ -60,7 +60,7 @@ class Plugin:
         if isinstance(res,dict):
             if 'status' in res and res['status'] == False and 'msg' in res:
                 if isinstance(res['msg'],str):
-                    if res['msg'].find('加载失败') != -1 or res['msg'].find('Traceback ') == 0:
+                    if res['msg'].find('Traceback ') != -1:
                         raise public.PanelError(res['msg'])
         return res
 

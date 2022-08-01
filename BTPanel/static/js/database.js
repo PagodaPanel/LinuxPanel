@@ -1706,18 +1706,31 @@ backupLogs: function (row, index, ev, key, that) {
           html += '<li '+ (_that.val() == item.name ? 'class="active"': '') + '>'+ item.name + '</li>'
         }
         $('.database_list').html(html)
-        database_list.width($(this)[0].clientWidth).show();
+        database_list.width($(this)[0].clientWidth);
         $(document).unbind('click').on('click', function (ev) {
-          if (ev.target.className.indexOf('inbox_input') == -1) {
+          if (ev.target.className.indexOf('inbox_input') == -1 && ev.target.className.indexOf('select_down') == -1) {
             if (_that.val() == '' || _that.val() != database_default.text()) {
               _that.val(database_default.text())
             }
             database_list.hide();
+          }else{
+            if (ev.target.className == 'select_down') {
+							if (database_list.css('display') == 'block') {
+								database_list.hide()
+							}else{
+								database_list.show()
+							}
+						}else{
+							database_list.show()
+						}
           }
           ev.stopPropagation();
         });
         return false;
       })
+      $('.select_conter .select_down').on('click',function () {
+				$('.select_conter input').focus()
+			})
       $('.select_conter input').on('input', function (e) {
         var html = '',_that = $(this)
         for (var i = 0; i < database.databaseName.length; i++) {
@@ -3769,7 +3782,7 @@ var redis = {
           },{
             label:'值',
             group:{
-              type:'text',
+              type:'textarea',
               name:'val',
               width:'260px',
               style: {

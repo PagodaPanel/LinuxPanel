@@ -8108,7 +8108,7 @@ var site = {
         { title: '反向代理', callback: site.edit.set_proxy },
         { title: '防盗链', callback: site.edit.set_security },
         { title: '<span class="glyphicon glyphicon-vip pro-font-icon" style="margin-left: -17px;"></span> 防篡改', callback: site.edit.set_tamper_proof },
-        { title: '<span class="glyphicon glyphicon-vip pro-font-icon" style="margin-left: -17px;"></span> 安全扫描', callback: site.edit.security_scanning },
+        { title: '<span class="glyphicon glyphicon-vip ltd-font-icon" style="margin-left: -17px;"></span> 安全扫描', callback: site.edit.security_scanning },
         { title: '网站日志', callback: site.edit.get_site_logs },
         // { title: '错误日志', callback: site.edit.get_site_error_logs }
       ]
@@ -8150,7 +8150,7 @@ var site = {
       var pushAlarm = rdata.push; // 是否推送告警
       var isStart = rdata.status; // 是否启用
       var layers = null;
-      var expirationTime = ((new Date((certificate.notAfter || '0000-00-00') + ' 00:00:00').getTime() - new Date().getTime()) / 1000).toFixed(0) / 60 / 60 / 24; // 证书过期时间
+      var expirationTime = certificate.endtime // 证书过期时间
       var isRenew = (function (){ // 是否续签
         var state = false;
         if(expirationTime <= 30) state = true;
@@ -8340,7 +8340,7 @@ var site = {
                 '</div>' +
                 '<div class="state_info_flex">' +
                 '<div class="state_item"><span>认证域名：</span><span class="ellipsis_text" title="' + certificate.dns.join('、') + '">' + certificate.dns.join('、') + '</span></div>' +
-                '<div class="state_item"><span>到期时间：</span><span class="' + (expirationTime >= 30 ? 'btlink' : 'bterror') + '">' + (expirationTime >= 30 ? ('剩余' + expirationTime.toFixed(0) + '天到期') : '证书已过期') + '</span></div>' +
+                '<div class="state_item"><span>到期时间：</span><span class="' + (expirationTime >= 30 ? 'btlink' : 'bterror') + '">' + (expirationTime >= 0 ? ('剩余' + expirationTime + '天到期') : '证书已过期') + '</span></div>' +
                 '</div>' +
                 '<div class="state_info_flex">' +
                 '<div class="state_item"><span>强制HTTPS：</span><span class="bt_switch"><input class="btswitch btswitch-ios" id="https" type="checkbox" ' + (rdata.httpTohttps ? 'checked' : '') + '><label class="btswitch-btn" for="https"></label></span></div>' +

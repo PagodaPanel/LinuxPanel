@@ -7,7 +7,6 @@
 # | Author: hwliang <hwl@bt.cn>
 # +-------------------------------------------------------------------
 import base64
-from genericpath import exists
 import public,re,os,nginx,apache,json,time,ols
 try:
     import pyotp
@@ -2350,10 +2349,18 @@ class config:
         """
         cpath = 'data/msg.json'
         try:
-            if 'force' in get or not os.path.exists(cpath):
+            if 'force' in get or not os.path.exists(cpath) or public.get_path_size(cpath)==0:
                 if not 'download_url' in session: session['download_url'] = public.get_url()
                 public.downloadFile('{}/linux/panel/msg/msg.json'.format(session['download_url']),cpath)
+
         except : pass
+
+
+        # 配置文件异常处理
+        try:
+            json.loads(public.readFile(cpath))
+        except:
+            if os.path.exists(cpath): os.remove(cpath)
 
         from panelMessage import panelMessage
         pm = panelMessage()
@@ -2459,6 +2466,7 @@ class config:
 
             sfile = '{}/class/msg/{}.html'.format(panelPath,module_name)
             public.downloadFile('{}/linux/panel/msg/{}.html'.format(down_url,module_name),sfile)
+            public.set_module_logs('msg_push', 'install_module', 1)
             return public.returnMsg(True, '【{}】模块安装成功.'.format(module_name))
         except:
             pass

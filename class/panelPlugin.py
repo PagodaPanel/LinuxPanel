@@ -355,7 +355,7 @@ class panelPlugin:
         opts = {'i':'安装','u':'更新','r':'修复'}
         i_opts = {'i':'install.sh install','u':'upgrade.sh','r':'repair.sh'}
 
-        if not os.path.exists(filename): return public.returnMsg(False,'临时文件不存在,请重新上传!')
+        if not os.path.exists(filename): return public.returnMsg(False,'文件校验失败，请重新安装此插件!')
         plugin_path_panel = self.__plugin_path + input_plugin_name
         if input_install_opt == 'r' and os.path.exists(filename + '/' + i_opts[input_install_opt]):
             i_opts[input_install_opt] = 'install.sh install'
@@ -369,6 +369,8 @@ class panelPlugin:
         self.__plugin_info = p_info
         self.__copy_path(filename,plugin_path_panel,p_info['not_substituted'])
         self.__set_pyenv(plugin_path_panel + '/install.sh')
+        log_file = '/tmp/panelShell.pl'
+        if os.path.exists(log_file): os.remove(log_file)
         public.ExecShell('cd ' + plugin_path_panel + ' && bash {} &> /tmp/panelShell.pl'.format(i_opts[input_install_opt]))
 
 
@@ -388,10 +390,12 @@ class panelPlugin:
             public.writeFile(reload_file,'')
             pluginInfo = self.__get_plugin_find(input_plugin_name)
             public.httpPost(public.GetConfigValue('home') + '/api/panel/plugin_total',{"pid":pluginInfo['id'],'p_name':input_plugin_name},3)
+            if os.path.exists(log_file): os.remove(log_file)
             return public.returnMsg(True,'{}成功!'.format(opts[input_install_opt]))
 
         # 安装失败清理安装文件？
         if os.path.exists(plugin_path_panel): shutil.rmtree(plugin_path_panel)
+        if os.path.exists(log_file): os.remove(log_file)
         return public.returnMsg(False,'{}失败!'.format(opts[input_install_opt]))
 
 

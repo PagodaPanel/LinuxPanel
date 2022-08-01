@@ -1427,10 +1427,8 @@ class ajax:
             @name 获取推荐列表
         """
         spath = '{}/data/pay_type.json'.format(public.get_panel_path())
-        down = cache.get('pay_type')
-        if not down:
+        if not os.path.exists(spath):
             public.run_thread(self.download_pay_type,(spath,))
-            cache.set('pay_type',1,86400)
         try:
             data = json.loads(public.readFile("data/pay_type.json"))
         except :

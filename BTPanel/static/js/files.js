@@ -4353,6 +4353,8 @@ var bt_file = {
         }, 100)
       },
       yes: function (data, indexs, layero) {
+        if(data.name === '') return layer.msg('软链接名称不能为空！', { icon: 2 })
+        if(data.sfile === '') return layer.msg('软链的文件夹和文件不能为空！', { icon: 2 })
         data = $.extend(data, { dfile: that.file_path + "/" + data.name });
         delete data.name;
         // var sfile = data.sfile,dirList = sfile.split('/');
@@ -4361,7 +4363,7 @@ var bt_file = {
           if (res.status) {
             layer.close(indexs);
             bt.msg(res);
-            that.reader_file_list();
+            that.reader_file_list({ path: that.file_path })
           }
         }, { tips: '创建软链接' });
       }

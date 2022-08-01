@@ -927,6 +927,7 @@ class panelSSL:
                         result['dns'].append(result['subject'])
                 else:
                     result['subject'] = result['dns'][0]
+            result['endtime'] = int(int(time.mktime(time.strptime(result['notAfter'], "%Y-%m-%d")) - time.time()) / 86400)
             return result
         except:
             return None

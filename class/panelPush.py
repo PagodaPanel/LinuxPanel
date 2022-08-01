@@ -364,9 +364,11 @@ class panelPush:
             conf = public.readFile(cpath)
             data = json.loads(conf)
         except :
-            time.sleep(0.5)
-            conf = public.readFile(cpath)
-            data = json.loads(conf)
+            try:
+                time.sleep(0.5)
+                conf = public.readFile(cpath)
+                data = json.loads(conf)
+            except:pass
 
         return data
 

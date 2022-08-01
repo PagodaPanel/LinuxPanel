@@ -4235,7 +4235,7 @@ bt.soft = {
                         <p>适用于官网，电商、教育、医疗等企业用户</p>\
                     </div>'+
                     (config.plugin ? '' : '<div class="libPay-menu-type lib_ops" >\
-                        <p><span class="glyphicon glyphicon-vip"></span><span style="margin-left:8px">企业运维版</span></p>\
+                        <p><span class="glyphicon glyphicon-vip"></span><span style="margin-left:8px">企业运维服务</span></p>\
                         <p>适用于无专业运维，需专业运维维护的企业用户</p>\
                     </div>')+
                     '<div class="libPay-menu-type lib_ver" >\
@@ -4352,7 +4352,7 @@ bt.soft = {
             name: '企业运维版',
             pid: 100000068,
             type: 'ops',
-            rlist: ['企业版所有特权 ','企业群服务群','企业微信一对一技术支持','面板所有功能配置协助','证书人工部署服务','系统漏洞排查协助','软件环境升级协助','磁盘挂载清理协助','站点性能优化协助']
+            rlist: ['企业版所有特权 ','企业群服务群','企业微信一对一技术支持','面板所有功能配置协助','证书人工部署服务','服务器安全巡检','服务器并发性能优化','CPU内存占满应急处理','50x/40x网站排错','磁盘挂载空间清理','CC防御配置','文件防篡改配置','文件同步部署','负载均衡部署','数据库主从部署']
           })
           $('.libPay-menu .libPay-menu-type').each(function (index) {
             $(this).data('data',arry[index])
@@ -7514,14 +7514,15 @@ bt.data = {
             name: 'codeing',
             type: 'select',
             width: '27%',
-            items: [{
-              title: 'utf-8',
-              value: 'utf8'
-            },
+            items: [
               {
                 title: 'utf8mb4',
                 value: 'utf8mb4'
               },
+              {
+                title: 'utf-8',
+                value: 'utf8'
+                },
               {
                 title: 'gbk',
                 value: 'gbk'

@@ -559,29 +559,36 @@ def check_panel_ssl():
     except Exception as e:
         public.writeFile("/tmp/panelSSL.pl", str(e), "a+")
 
-# 监控面板状态
-def panel_status():
-    time.sleep(1)
-    panel_pid = get_panel_pid()
-    while True:
-        time.sleep(30)
-        if not panel_pid:
-            panel_pid = get_panel_pid()
-        if not panel_pid:
-            service_panel('start')
+# 面板进程守护
+def daemon_panel():
+    cycle = 10
+    panel_pid_file = "{}/logs/panel.pid".format(public.get_panel_path())
+    while 1:
+        time.sleep(cycle)
 
-        try:
-            f = Process(panel_pid).cmdline()[-1]
-            if f.find('runserver') == -1 and f.find('BT-Panel') == -1:
-                service_panel('start')
-                time.sleep(3)
-                panel_pid = get_panel_pid()
-                continue
-        except:
-            service_panel('start')
-            time.sleep(3)
-            panel_pid = get_panel_pid()
+        # 检查pid文件是否存在
+        if not os.path.exists(panel_pid_file):
             continue
+
+        # 读取pid文件
+        panel_pid = public.readFile(panel_pid_file)
+        if not panel_pid:
+            service_panel('start')
+            continue
+
+        # 检查进程是否存在
+        comm_file = "/proc/{}/comm".format(panel_pid)
+        if not os.path.exists(comm_file):
+            service_panel('start')
+            continue
+
+        # 是否为面板进程
+        comm = public.readFile(comm_file)
+        if comm.find('BT-Panel') == -1:
+            service_panel('start')
+            continue
+
+
 
 
 def update_panel():
@@ -593,6 +600,8 @@ def service_panel(action='reload'):
         update_panel()
     else:
         os.system("nohup bash /www/server/panel/init.sh {} > /dev/null 2>&1 &".format(action))
+    logging.info("面板服务: {}".format(action))
+
 
 # 重启面板服务
 def restart_panel_service():
@@ -873,7 +882,7 @@ def run_thread():
         "start_task": task_obj.start_task,
         "systemTask": systemTask,
         "check502Task": check502Task,
-        "panel_status": panel_status,
+        "daemon_panel": daemon_panel,
         "restart_panel_service": restart_panel_service,
         "check_panel_ssl": check_panel_ssl,
         "send_mail_time": send_mail_time,
