@@ -220,7 +220,6 @@ def request_end(reques=None):
     not_acts = ['GetTaskSpeed', 'GetNetWork', 'check_pay_status', 'get_re_order_status', 'get_order_stat']
     key = request.args.get('action')
     if not key in not_acts and request.full_path.find('/static/') == -1:
-        public.write_request_log()
         if 'api_request' in g:
             if g.api_request:
                 session.clear()

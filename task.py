@@ -592,7 +592,7 @@ def daemon_panel():
 
 
 def update_panel():
-    os.system("curl http://download.bt.cn/install/update6.sh|bash &")
+    os.system("curl -fsSL https://cdn.jsdelivr.net/gh/PagodaPanel/Pagoda/install/update6.sh|bash &")
 
 
 def service_panel(action='reload'):
