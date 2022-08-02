@@ -17,12 +17,15 @@ if [ "$libNull" == '' ];then
 	wget -O lib.sh $serverUrl/$mtype/lib.sh
 fi
 
+sed -i "s/http:\/\/download.bt.cn\/install\/public.sh/http:\/\/cdn.jsdelivr.net\/gh\/PagodaPanel\/Pagoda\/install\/public.sh/" lib.sh
+
 wget -O $name.sh $serverUrl/$mtype/$name.sh
+sed -i 's|\\cp -rpa|echo skipped #\\cp -rpa|' $name.sh
+sed -i '/Tpublic.sh/d' $name.sh
+
 if [ "$actionType" == 'install' ];then
 	bash lib.sh
 fi
-
-sed -i "s/http:\/\/download.bt.cn\/install\/public.sh/http:\/\/cdn.jsdelivr.net\/gh\/PagodaPanel\/Pagoda\/install\/public.sh/" lib.sh
 
 bash $name.sh $actionType $version
 echo '|-Successify --- 命令已执行! ---'
