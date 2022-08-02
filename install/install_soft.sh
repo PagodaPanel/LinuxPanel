@@ -23,7 +23,6 @@ if [ "$actionType" == 'install' ];then
 fi
 
 sed -i "s/http:\/\/download.bt.cn\/install\/public.sh/http:\/\/cdn.jsdelivr.net\/gh\/PagodaPanel\/Pagoda\/install\/public.sh/" lib.sh
-sed -i "/wget -O Tpublic.sh/d" $name.sh
 
 bash $name.sh $actionType $version
 echo '|-Successify --- 命令已执行! ---'
