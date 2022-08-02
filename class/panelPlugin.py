@@ -193,7 +193,8 @@ class panelPlugin:
         temp_file = temp_file.replace('wget -O Tpublic.sh', '#wget -O Tpublic.sh')
         temp_file = temp_file.replace('\cp -rpa Tpublic.sh', '#\cp -rpa Tpublic.sh')
         temp_file = temp_file.replace('rm -f Tpublic.sh', '#rm -f Tpublic.sh')
-        #temp_file = temp_file.replace('download.bt.cn/install/public.sh', 'www.example.com/install/public.sh')
+        #temp_file = temp_file.replace('http://download.bt.cn/install/public.sh', 'http://www.example.com/install/public.sh')
+        #temp_file = temp_file.replace('https://download.bt.cn/install/public.sh', 'http://www.example.com/install/public.sh')
         env_path=['PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin']
         rep_path=['PATH={}/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin'.format(env_py+":")]
         for index_key in range(len(env_path)):
@@ -827,6 +828,12 @@ class panelPlugin:
         env_py = '/www/server/panel/pyenv/bin'
         if not os.path.exists(env_py): return False
         temp_file = public.readFile(filename)
+        # Remove force update public.sh
+        temp_file = temp_file.replace('wget -O Tpublic.sh', '#wget -O Tpublic.sh')
+        temp_file = temp_file.replace('\cp -rpa Tpublic.sh', '#\cp -rpa Tpublic.sh')
+        temp_file = temp_file.replace('rm -f Tpublic.sh', '#rm -f Tpublic.sh')
+        #temp_file = temp_file.replace('http://download.bt.cn/install/public.sh', 'http://www.example.com/install/public.sh')
+        #temp_file = temp_file.replace('https://download.bt.cn/install/public.sh', 'http://www.example.com/install/public.sh')
         env_path=['PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin']
         rep_path=['PATH={}/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin'.format(env_py+":")]
         for i in range(len(env_path)):
@@ -1882,7 +1889,7 @@ class panelPlugin:
             if downFile:
                 public.ExecShell('wget -O ' + iconFile + ' ' + 'https://www.bt.cn' + downFile + " &")
             else:
-                public.ExecShell('wget -O ' + iconFile + ' ' + public.get_url() + '/install/plugin/' + name + '/icon.png' + " &")
+                public.ExecShell('wget -O ' + iconFile + ' ' + 'https://www.bt.cn' + '/install/plugin/' + name + '/icon.png' + " &")
         cache.set(skey,1,86400)
 
 
