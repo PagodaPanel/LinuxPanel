@@ -17,7 +17,7 @@ if [ "$libNull" == '' ];then
 	wget -O lib.sh $serverUrl/$mtype/lib.sh
 fi
 
-sed -i "s/http:\/\/download.bt.cn\/install\/public.sh/http:\/\/cdn.jsdelivr.net\/gh\/PagodaPanel\/Pagoda\/install\/public.sh/" lib.sh
+sed -i "s/http:\/\/download.bt.cn\/install\/public.sh/http:\/\/cdn.jsdelivr.net\/gh\/PagodaPanel\/install\/install\/public.sh/" lib.sh
 
 wget -O $name.sh $serverUrl/$mtype/$name.sh
 sed -i 's|\\cp -rpa|echo skipped #\\cp -rpa|' $name.sh

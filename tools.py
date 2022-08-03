@@ -624,7 +624,7 @@ def bt_cli(u_input = 0):
     elif u_input == 15:
         ClearSystem()
     elif u_input == 16:
-        os.system("curl -fsSL https://cdn.jsdelivr.net/gh/PagodaPanel/Pagoda/install/update6.sh|bash")
+        os.system("curl -fsSL https://cdn.jsdelivr.net/gh/PagodaPanel/install/install/update6.sh|bash")
     elif u_input == 17:
         l_path = '/www/server/panel/data/log_not_gzip.pl'
         if os.path.exists(l_path):
