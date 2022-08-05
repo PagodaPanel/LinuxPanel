@@ -22,7 +22,7 @@ if not 'class/' in sys.path:
     sys.path.insert(0, 'class/')
 
 from flask import Config, Flask, session, render_template, send_file, request, redirect, g, make_response, \
-    render_template_string, abort,stream_with_context, Response as Resp
+    render_template_string, abort,stream_with_context,__version__, Response as Resp
 from cachelib import SimpleCache
 from werkzeug.wrappers import Response
 from flask_session import Session
@@ -290,9 +290,9 @@ REQUEST_FORM: {request_form}
     request_date = public.getDate(),
     remote_addr = public.GetClientIp(),
     method = request.method,
-    full_path = request.full_path,
+    full_path = public.xsssec(request.full_path),
     request_form = _form,
-    user_agent = request.headers.get('User-Agent'),
+    user_agent = public.xsssec(request.headers.get('User-Agent')),
     panel_version = public.version(),
     os_version = public.get_os_version()
 )
@@ -905,7 +905,7 @@ def ssl(pdata=None):
         import base64
         result = toObject.download_cert(get)
         fp = BytesIO(base64.b64decode(result['data']))
-        return send_file(fp, attachment_filename=result['filename'], as_attachment=True, mimetype='application/zip')
+        return send_file(fp, download_name=result['filename'], as_attachment=True, mimetype='application/zip')
     result = publicObject(toObject, defs, get.action, get)
     return result
 
@@ -993,10 +993,10 @@ def download():
         if extName in ['png', 'gif', 'jpeg', 'jpg']: mimetype = None
         return send_file(filename, mimetype=mimetype,
                          as_attachment=True,
-                         add_etags=True,
+                         etag=True,
                          conditional=True,
-                         attachment_filename=os.path.basename(filename),
-                         cache_timeout=0)
+                         download_name=os.path.basename(filename),
+                         max_age=0)
 
 
 @app.route('/cloud', methods=method_all)
@@ -1078,7 +1078,7 @@ def send_favicon():
     if comReturn: return abort(404)
     s_file = '/www/server/panel/BTPanel/static/favicon.ico'
     if not os.path.exists(s_file): return abort(404)
-    return send_file(s_file, conditional=True, add_etags=True)
+    return send_file(s_file, conditional=True, etag=True)
 
 @app.route('/rspamd', defaults={'path': ''},methods=method_all)
 @app.route('/rspamd/<path:path>',methods=method_all)
@@ -1095,9 +1095,9 @@ def proxy_rspamd_requests(path):
         headers[h] = request.headers[h]
     if request.method == "GET":
         if re.search("\.(js|css)$",path):
-            return send_file('/usr/share/rspamd/www/rspamd/'+path,conditional=True,add_etags=True)
+            return send_file('/usr/share/rspamd/www/rspamd/'+path,conditional=True,etag=True)
         if path == "/":
-            return send_file('/usr/share/rspamd/www/rspamd/',conditional=True,add_etags=True)
+            return send_file('/usr/share/rspamd/www/rspamd/',conditional=True,etag=True)
         url = "http://127.0.0.1:11334/rspamd/" + path + "?" +param
         for i in ['stat','auth','neighbours','list_extractors','list_transforms','graph','maps','actions','symbols','history','errors','check_selector','saveactions','savesymbols','getmap']:
             if i in path:
@@ -1306,7 +1306,7 @@ def code():
     cache.set("codeStr", public.md5("".join(codeImage[1]).lower()), 180)
     cache.set("codeOut", 1, 0.1)
     out.seek(0)
-    return send_file(out, mimetype='image/png', cache_timeout=0)
+    return send_file(out, mimetype='image/png', max_age=0)
 
 
 @app.route('/down/<token>', methods=method_all)
@@ -1389,8 +1389,8 @@ def down(token=None, fname=None):
             b_name = os.path.basename(filename)
             return send_file(filename, mimetype=mimetype,
                              as_attachment=True,
-                             attachment_filename=b_name,
-                             cache_timeout=0)
+                             download_name=b_name,
+                             max_age=0)
     except:
         return abort(404)
 
@@ -1534,7 +1534,7 @@ def panel_other(name=None, fun=None, stype=None):
         if not re.match(r"^[\w\./-]+$", s_file): return abort(404)
         if not public.path_safe_check(s_file): return abort(404)
         if not os.path.exists(s_file): return abort(404)
-        return send_file(s_file, conditional=True, add_etags=True)
+        return send_file(s_file, conditional=True, etag=True)
 
     # 准备参数
     if not args: args = get_input()

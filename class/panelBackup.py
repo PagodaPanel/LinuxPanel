@@ -503,10 +503,41 @@ class backup:
         error_msg = ""
         # ----- 判断是否为远程数据库START  @author hwliang<2021-01-08>--------
         db_find = public.M('databases').where("name=?",(db_name,)).find()
+        if db_find['type'] != "MySQL":
+            # if db_find['type'] in ['SQLServer','Redis']:
+            print("|-{}数据库暂不支持备份".format(db_find['type']))
+            return False
+            # if db_find['type'] == "MongoDB":
+            #     import databaseModel.mongodbModel as mongodbModel
+            #     args = public.dict_obj()
+            #     args.id = db_find['id']
+            #     args.name = db_find['name']
+            #     backup_res = mongodbModel.panelMongoDB().ToBackup(args)
+            # elif db_find['type'] == "PgSQL":
+            #     import databaseModel.pgsqlModel as pgsqlModel
+            #     args = public.dict_obj()
+            #     args.id = db_find['id']
+            #     args.name = db_find['name']
+            #     backup_res = pgsqlModel.panelPgsql().ToBackup(args)
+
+            # if not isinstance(backup_res,dict) or not 'status' in backup_res:
+
+            #     return False
+
+            # if not backup_res['status']:
+            #     print("|-{}数据库备份失败".format(db_find['name']))
+            #     print("|-{}".format(backup_res['msg']))
+            #     return False
+            # dfile = dfile = os.path.join(self._path,'database',,fname)
+            # print("|-{}数据库备份成功".format(db_find['name']))
+            # print("|-数据库已备份到:{}".format(dfile))
+
+            # return False
         conn_config = {}
         self._db_mysql = public.get_mysql_obj(db_name)
         is_cloud_db = db_find['db_type'] in ['1',1,'2',2]
         if is_cloud_db:
+
             # 连接远程数据库
             if db_find['sid']:
                 conn_config = public.M('database_servers').where('id=?',db_find['sid']).find()
@@ -514,7 +545,10 @@ class backup:
             else:
                 conn_config = json.loads(db_find['conn_config'])
             conn_config['db_port'] = str(int(conn_config['db_port']))
-            self._db_mysql.set_host(conn_config['db_host'],int(conn_config['db_port']),conn_config['db_name'],conn_config['db_user'],conn_config['db_password'])
+            if not self._db_mysql or  not self._db_mysql.set_host(conn_config['db_host'],int(conn_config['db_port']),conn_config['db_name'],conn_config['db_user'],conn_config['db_password']):
+                error_msg = "连接远程数据库[{}:{}]失败".format(conn_config['db_host'],conn_config['db_port'])
+                print(error_msg)
+                return False
         # ----- 判断是否为远程数据库END @author hwliang<2021-01-08>------------
         d_tmp = self._db_mysql.query("select sum(DATA_LENGTH)+sum(INDEX_LENGTH) from information_schema.tables where table_schema='%s'" % db_name)
         try:

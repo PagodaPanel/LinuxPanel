@@ -1373,7 +1373,7 @@ class config:
 
     #取面板错误日志
     def get_error_logs(self,get):
-        return public.GetNumLines('logs/error.log',2000)
+        return self.xsssec(public.GetNumLines('logs/error.log',2000))
 
     def is_pro(self,get):
         import panelAuth,json
@@ -1552,12 +1552,16 @@ class config:
         public.writeFile('data/reload.pl','True')
         return public.returnMsg(True,"设置成功!")
 
+    # xss 防御
+    def xsssec(self,text):
+        return text.replace('<', '&lt;').replace('>', '&gt;')
+
     #取面板运行日志
     def get_panel_error_logs(self,get):
         filename = 'logs/error.log'
         if not os.path.exists(filename): return public.returnMsg(False,'没有找到运行日志')
         result = public.GetNumLines(filename,2000)
-        return public.returnMsg(True,result)
+        return public.returnMsg(True,self.xsssec(result))
     #清空面板运行日志
     def clean_panel_error_logs(self,get):
         filename = 'logs/error.log'
@@ -2417,6 +2421,11 @@ class config:
                         x['setup'] = True
                         x['data'] = obj.get_config(None)
                         x['info'] = obj.get_version_info(None);
+                        if key == "sms":
+                            if "version" in x['info'] and x['info']['version'] == "1.0":
+                                g = public.dict_obj()
+                                g.name = key
+                                self.install_msg_module(g)
                 except :
                     print(public.get_error_info())
                     pass
@@ -2428,12 +2437,25 @@ class config:
         获取模块模板
         """
         panelPath = "/www/server/panel"
-        sfile = '{}/class/msg/{}.html'.format(panelPath,get.module_name)
+        module_name = get.module_name
+        sfile = '{}/class/msg/{}.html'.format(panelPath, module_name)
         if not os.path.exists(sfile):
             return public.returnMsg(False, '模板文件不存在.')
 
-        shtml = public.readFile(sfile)
-        return public.returnMsg(True, shtml)
+        if module_name in ["sms"]:
+            from panelMessage import panelMessage
+            pm = panelMessage()
+            obj = pm.init_msg_module(module_name)
+            if obj:
+                args = public.dict_obj()
+                args.reload = True
+                data = obj.get_config(args)
+                from flask import render_template_string
+                shtml = public.readFile(sfile)
+                return public.returnMsg(True, render_template_string(shtml, data=data))
+        else:
+            shtml = public.readFile(sfile)
+            return public.returnMsg(True, shtml)
 
     def set_msg_config(self,get):
         """

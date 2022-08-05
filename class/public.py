@@ -999,9 +999,9 @@ REQUEST_FORM: {request_form}
     request_date = getDate(),
     remote_addr = GetClientIp(),
     method = request.method,
-    full_path = url_encode(request.full_path),
+    full_path = url_encode(xsssec(request.full_path)),
     request_form = request.form.to_dict(),
-    user_agent = request.headers.get('User-Agent'),
+    user_agent = xsssec(request.headers.get('User-Agent')),
     panel_version = version(),
     os_version = get_os_version()
 )
@@ -3105,13 +3105,23 @@ def send_file(data,fname='',mimetype = ''):
     if not mimetype: mimetype = "application/octet-stream"
     if not fname: fname = 'doan.txt'
 
-    return send_to(fp,
-                    mimetype=mimetype,
-                    as_attachment=True,
-                    add_etags=True,
-                    conditional=True,
-                    attachment_filename=fname,
-                    cache_timeout=0)
+    import flask
+    if flask.__version__ < "2.1.0":
+        return send_to(fp,
+                        mimetype=mimetype,
+                        as_attachment=True,
+                        etag=True,
+                        conditional=True,
+                        attachment_filename=fname,
+                        cache_timeout=0)
+    else:
+        return send_to(fp,
+                        mimetype=mimetype,
+                        as_attachment=True,
+                        etag=True,
+                        conditional=True,
+                        download_name=fname,
+                        max_age=0)
 
 def gen_password(length=8,chars=string.ascii_letters+string.digits):
     from random import choice
@@ -4607,7 +4617,10 @@ def get_recycle_bin_list():
     default_path = '/www/.Recycle_bin'
     default_path_src = '/www/Recycle_bin'
     if os.path.exists(default_path_src) and not os.path.exists(default_path):
-        os.rename(default_path_src,default_path)
+        try:
+            os.rename(default_path_src,default_path)
+        except:
+            ExecShell("mv {} {}".format(default_path_src,default_path))
 
     if not os.path.exists(default_path):
         os.makedirs(default_path,384)

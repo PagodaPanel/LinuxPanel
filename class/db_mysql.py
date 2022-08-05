@@ -48,15 +48,24 @@ class panelMysql:
         self._USER = str(username)
         self.__DB_PASS = str(password)
         self.__DB_PREFIX = prefix
-        self.__GetConn()
+        if not self.__GetConn(): return False
         return self
 
     #连接MYSQL数据库
     def __GetConn(self):
         try:
+            print(self.__DB_HOST,self.__DB_PORT,self.__DB_NAME,self.__DB_USER,self.__DB_PASS)
             self.__DB_CONN = pymysql.connect(host=self.__DB_HOST,user=self.__DB_USER,passwd=str(self.__DB_PASS),db=self.__DB_NAME,port=self.__DB_PORT,connect_timeout=15,read_timeout=60,write_timeout=60)
-        except:
-            self.__DB_CONN = pymysql.connect(host=self.__DB_HOST,user=self.__DB_USER,passwd=str(self.__DB_PASS),db=self.__DB_NAME,port=self.__DB_PORT)
+        except Exception as ex:
+            self.__DB_ERR = "error: " + str(ex)
+            print(ex)
+            if self.__DB_ERR.find("timed out") != -1 or self.__DB_ERR.find("is not allowed to connect") != -1: return False
+            try:
+                self.__DB_CONN = pymysql.connect(host=self.__DB_HOST,user=self.__DB_USER,passwd=str(self.__DB_PASS),db=self.__DB_NAME,port=self.__DB_PORT)
+            except Exception as ex:
+                self.__DB_ERR = "error: " + str(ex)
+                print(ex)
+                return False
         self.__DB_CUR  = self.__DB_CONN.cursor()
         return True
 

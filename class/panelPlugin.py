@@ -377,7 +377,6 @@ class panelPlugin:
 
         # 清理临时文件
         if os.path.exists(filename): shutil.rmtree(filename)
-
         if p_info:
             # 复制图标
             icon_sfile = plugin_path_panel + '/icon.png'
@@ -390,7 +389,8 @@ class panelPlugin:
             reload_file = os.path.join(self.__panel_path,'data/{}.pl'.format(input_plugin_name))
             public.writeFile(reload_file,'')
             pluginInfo = self.__get_plugin_find(input_plugin_name)
-            public.httpPost(public.GetConfigValue('home') + '/api/panel/plugin_total',{"pid":pluginInfo['id'],'p_name':input_plugin_name},3)
+            public.run_thread(public.httpPost,(public.GetConfigValue('home') + '/api/panel/plugin_total',{"pid":pluginInfo['id'],'p_name':input_plugin_name},10)) # 线程
+            # public.httpPost(public.GetConfigValue('home') + '/api/panel/plugin_total',{"pid":pluginInfo['id'],'p_name':input_plugin_name},3)
             if os.path.exists(log_file): os.remove(log_file)
             return public.returnMsg(True,'{}成功!'.format(opts[input_install_opt]))
 
@@ -754,7 +754,8 @@ class panelPlugin:
         try:
             if 'status' in result:
                 if result['status']:
-                    public.httpPost(public.GetConfigValue('home') + '/api/panel/plugin_total',{"pid":pluginInfo['id'],'p_name':pluginInfo['name']},3)
+                    public.run_thread(public.httpPost,(public.GetConfigValue('home') + '/api/panel/plugin_total',{"pid":pluginInfo['id'],'p_name':pluginInfo['name']},3)) # 走线程
+                    # public.httpPost(public.GetConfigValue('home') + '/api/panel/plugin_total',{"pid":pluginInfo['id'],'p_name':pluginInfo['name']},3)
         except:pass
         return result
 
@@ -963,6 +964,12 @@ class panelPlugin:
         force  = False
         if hasattr(get,'force'):
             if int(get.force) == 1: force = True
+        #tkey = 'is_flush_plugin_list'
+        #if not session.get(tkey): # 更新最新的软件列表
+        #    session[tkey] = 1
+        #    _cmd = "nohup {} {}/script/flush_plugin.py > /dev/null 2>&1 &".format(public.get_python_bin(),public.get_panel_path())
+        #    public.ExecShell(_cmd)
+
         self.__is_bind_user()
         skey = 'TNaMJdG3mDHKRS6Y'
         softList = cache.get(skey)
@@ -2475,12 +2482,21 @@ class panelPlugin:
         mimetype = 'text/html'
         cache_time = 0 if public.is_debug() else 86400
         self.plugin_open_total(get.name)
-        return send_file(filename,
-                    mimetype = mimetype,
-                    as_attachment = True,
-                    add_etags = True,
-                    conditional = True,
-                    cache_timeout = cache_time)
+        import flask
+        if flask.__version__ < "2.1.0":
+            return send_file(filename,
+                        mimetype = mimetype,
+                        as_attachment = True,
+                        add_etags = True,
+                        conditional = True,
+                        cache_timeout = cache_time)
+        else:
+            return send_file(filename,
+                        mimetype = mimetype,
+                        as_attachment = True,
+                        etag = True,
+                        conditional = True,
+                        max_age = cache_time)
 
 
     def creatab_open_total_table(self,sql):

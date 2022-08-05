@@ -1013,6 +1013,8 @@ class panelSSL:
             @author cjx
             @version 1.0
         '''
+        if not 'pdata' in args:
+            return public.returnMsg(False,'pdata参数不能为空!')
         pdata = json.loads(args.pdata)
         self.__PDATA['data'] = pdata
 

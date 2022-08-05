@@ -985,7 +985,13 @@ echo $! > {pid_file}'''.format(
             return public.return_error('项目目录不存在: {}'.format(get.project_exe))
 
         # 端口占用检测
-        if self.check_port_is_used(get.get('port/port')):
+        try:
+            ports=int(get.port)
+            if ports<10 and ports>65535:
+                return public.return_error('端口号不合法，请输入10-65535之间的数字')
+        except:
+            return public.return_error('端口号不合法，请输入10-65535之间的数字')
+        if self.check_port_is_used(get.port):
             return public.return_error('指定端口已被其它应用占用，请修改您的项目配置使用其它端口, 端口: {}'.format(get.port))
         # if 'domains' in get:
         #     domains = json.loads(get.domains)

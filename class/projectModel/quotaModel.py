@@ -240,6 +240,8 @@ class main(projectBase):
                         quota['insert_accept'] = True
                         public.WriteLog('磁盘配额','已关闭数据库[{}]配额,恢复插入权限'.format(quota['db_name']))
                         continue
+                    else:
+                        continue
 
                 if used_size < quota['size']:
                     if not quota['insert_accept']:

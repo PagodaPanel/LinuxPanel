@@ -34,7 +34,7 @@ $('#cutMode .tabs-item').on('click', function () {
         })
       }
       break;
-    
+
       case 'go':
         if(typeof goModel == "undefined"){
           $.getScript('/static/js/siteModel.js',function(ev){
@@ -43,7 +43,7 @@ $('#cutMode .tabs-item').on('click', function () {
         }else{
           goModel.reanderProjectList()
         }
-  
+
         break;
       case 'other':
         if(typeof otherModel == "undefined"){
@@ -1848,7 +1848,7 @@ var site = {
         { title: '修改默认页', event: function (ev) { site.set_default_page() } },
         { title: '默认站点', event: function (ev) { site.set_default_site() } },
         { title: 'PHP命令行版本', event: function (ev) { site.get_cli_version() } },
-        { title: '安全设置', event: function (ev) { site.open_safe_config() } },
+        { title: 'HTTPS防窜站', event: function (ev) { site.open_safe_config() } },
         { title: '漏洞扫描', event: function (ev) { site.reader_scan_view() } },
         ]
       }, { // 搜索内容
@@ -3393,7 +3393,7 @@ var site = {
   open_safe_config: function () {
     bt.open({
       type: 1,
-      title: '安全设置',
+      title: 'HTTPS防窜站',
       area: '340px',
       closeBtn: 2,
       shift: 0,
@@ -8167,7 +8167,9 @@ var site = {
           msg: '当前证书订单需要重新生成新订单，需要手动续签，和重新部署证书，是否继续操作?'
         }, function () {
           var loadT = bt.load('正在续签证书，可能等待时间较长，请稍候...');
-          bt.send('renew_cert_order', 'ssl/renew_cert_order', { oid: item.oid }, function (res) {
+          bt.send('renew_cert_order', 'ssl/renew_cert_order', {
+            pdata:JSON.stringify({ oid: item.oid })
+          }, function (res) {
             loadT.close();
             site.reload();
             setTimeout(function () {
