@@ -692,6 +692,7 @@ var index = {
       $("#indexsoft").html(con);
 
       // 推荐安装软件
+      /*
       try {
         var recomConfig = product_recommend.get_recommend_type(1)
         if(recomConfig){
@@ -718,6 +719,7 @@ var index = {
       } catch (error) {
         console.log(error)
       }
+      */
       //软件位置移动
       if (setup_length <= softboxsum) {
         for (var i = 0; i < softboxsum - setup_length; i++) {
