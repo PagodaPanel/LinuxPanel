@@ -22,14 +22,13 @@ function CreateWebsiteModel(config) {
 	this.bindHttp(); //将请求映射到对象
 	this.reanderProjectList(); // 渲染列表
 }
-
 /**
  * @description 渲染获取项目列表
  */
 CreateWebsiteModel.prototype.reanderProjectList = function () {
 	var _that = this;
 	$('#bt_' + this.type + '_table').empty();
-	var model_table = bt_tools.table({
+	site.model_table = bt_tools.table({
 		el: '#bt_' + this.type + '_table',
 		url: '/project/' + _that.type + '/get_project_list',
 		minWidth: '1000px',
@@ -200,7 +199,7 @@ CreateWebsiteModel.prototype.reanderProjectList = function () {
 												status: res.status,
 												msg: res.data || res.error_msg,
 											});
-											model_table.$refresh_table_list(true);
+											site.model_table.$refresh_table_list(true);
 										}
 									);
 								}
@@ -222,7 +221,7 @@ CreateWebsiteModel.prototype.reanderProjectList = function () {
 						active: true,
 						event: function (ev) {
 							_that.reanderAddProject(function () {
-								model_table.$refresh_table_list(true);
+								site.model_table.$refresh_table_list(true);
 							});
 						},
 					},
@@ -273,12 +272,12 @@ CreateWebsiteModel.prototype.reanderProjectList = function () {
 													: item.requests.error_msg) +
 												'</span></div></td></tr>';
 										}
-										model_table.$batch_success_table({
+										site.model_table.$batch_success_table({
 											title: '批量删除项目',
 											th: '项目名称',
 											html: html,
 										});
-										model_table.$refresh_table_list(true);
+										site.model_table.$refresh_table_list(true);
 									});
 								}
 							);
@@ -468,6 +467,7 @@ CreateWebsiteModel.prototype.getAddProjectConfig = function (data) {
 				event: function (fromData) {
 					// 编辑项目
 					fromData.is_power_on = fromData.is_power_on ? 1 : 0;
+					if (parseInt(fromData.port) < 0 || parseInt(fromData.port) > 65535) return layer.msg('项目端口号应为[0-65535]',{icon:2})
 					that.modifyProject(fromData, function (res) {
 						bt.msg({ status: res.status, msg: res.data });
 						that.simulatedClick(0);
@@ -517,6 +517,7 @@ CreateWebsiteModel.prototype.reanderAddProject = function (callback) {
 				delete formData.domains;
 			}
 			formData.is_power_on = formData.is_power_on ? 1 : 0;
+			if (parseInt(formData.port) < 0 || parseInt(formData.port) > 65535) return layer.msg('项目端口号应为[0-65535]',{icon:2})
 			that.createProject(formData, function (res) {
 				if (res.status) {
 					layer.close(indexs);

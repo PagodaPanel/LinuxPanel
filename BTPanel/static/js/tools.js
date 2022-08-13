@@ -1043,6 +1043,7 @@ var bt_tools = {
                 val = val.replace(/\s+/g, "");
                 _search.val(val);
                 _that.config.search.value = val;
+								_that.config.page.page = 1;
                 _search.append('<div class="bt_search_tips"><span>' + val + '</span><i class="bt_search_close"></i></div>');
                 _that.$refresh_table_list(true);
                 break;
@@ -1731,6 +1732,7 @@ var bt_tools = {
                       if (!$(this).hasClass('active') && !$(this).hasClass('disabled')) {
                         var value = item_config.value.toString();
                         $(this).parent().prev().find('.bt_select_content').text($(this).text());
+                        $(this).parent().prev().find('.bt_select_content').prop('title',$(this).text());
                         if (config.type != "multipleSelect"){
                           $(this).addClass('active').siblings().removeClass('active');
                           $(this).parent().next().val(value)

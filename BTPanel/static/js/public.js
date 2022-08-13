@@ -1601,6 +1601,7 @@ var aceEditor = {
   },
   // 打开编辑器文件-方法
   openEditorView: function (path, callback) {
+    if($('.layui-layer-maxmin').length) $('.layui-layer-maxmin').click()
     if (path == undefined) return false;
     // 文件类型（type，列如：JavaScript） 、文件模型（mode，列如：text）、文件标识（id,列如：x8AmsnYn）、文件编号（index,列如：0）、文件路径 (path，列如：/www/root/)
     var _this = this, paths = path.split('/'), _fileName = paths[paths.length - 1], _fileType = this.getFileType(_fileName), _type = _fileType.name, _mode = _fileType.mode, _id = bt.get_random(8), _index = this.editorLength;
@@ -2260,14 +2261,14 @@ function ChangePath (d) {
   setCookie("ChangePath", c);
   var b = $("#" + d).val();
   tmp = b.split(".");
-  if (tmp[tmp.length - 1] == "gz") {
+  // if (tmp[tmp.length - 1] == "gz") {
     tmp = b.split("/");
     b = "";
     for (var a = 0; a < tmp.length - 1; a++) {
       b += "/" + tmp[a]
     }
     setCookie("SetName", tmp[tmp.length - 1])
-  }
+  // }
   b = b.replace(/\/\//g, "/");
   GetDiskList(b);
   ActiveDisk()
@@ -4570,10 +4571,10 @@ var product_recommend = {
    * @description 或指定版本事件
    * @param {} name 
    */
-  get_version_event:function (item,param) {
+  get_version_event:function (item,param,config) {
     bt.soft.get_soft_find(item.name,function(res){
       if(!item.isBuy){
-        product_recommend.recommend_product_view(item)
+        product_recommend.recommend_product_view(item, config)
       }else if(!res.setup){
         bt.soft.install(item.name)
       }else{
@@ -4651,30 +4652,31 @@ var product_recommend = {
    * @description 推荐购买产品
    * @param {Object} pay_id 购买的入口id
   */
-  recommend_product_view: function (config) {
-    var name = config.name.split('_')[0];
-    var status = this.get_pay_status(config);
+  recommend_product_view: function (data, config) {
+    var name = data.name.split('_')[0];
+    var status = this.get_pay_status(data);
     bt.open({
       title:false,
-      area:'650px',
+      area: '650px',
       btn:false,
       content:'<div class="ptb15" style="display: flex;">\
         <div class="product_view"><img src="/static/images/recommend/'+ name +'.png"/></div>\
         <div class="product_describe ml10">\
-          <div class="describe_title">'+ config.pluginName +'</div>\
-          <div class="describe_ps">'+ config.ps +'</div>\
+          <div class="describe_title">'+ data.pluginName +'</div>\
+          <div class="describe_ps">'+ data.ps +'</div>\
           <div class="product_describe_btn">\
-            <a class="btn btn-default mr10 btn-sm productPreview '+ (!config.preview?'hide':'') +'" href="'+ config.preview +'" target="_blank">产品预览</a><button class="btn btn-success btn-sm buyNow">立即购买</button>\
+            <a class="btn btn-default mr10 btn-sm productPreview '+ (!data.preview?'hide':'') +'" href="'+ data.preview +'" target="_blank">产品预览</a><button class="btn btn-success btn-sm buyNow">立即购买</button>\
           </div>\
         </div>\
       </div>',
       success:function () {
+				var area = config && config.imgArea ? config.imgArea : ['650px','450px']
         // 产品预览
         $('.product_view img').click(function () {
           layer.open({
             type:1,
             title:'查看图片',
-            area:['650px','450px'],
+            area: area,
             closeBtn:2,
             btn:false,
             content:'<img src="/static/images/recommend/'+ name +'.png" style="width:100%" />'
@@ -4684,10 +4686,10 @@ var product_recommend = {
         $('.buyNow').click(function(){
           switch (status.advanced) {
             case 'pro':
-              bt.soft['updata_' + status.advanced](config.pay);
+              bt.soft['updata_' + status.advanced](data.pay);
               break;
             case 'ltd':
-              bt.soft['updata_' + status.advanced](false, config.pay);
+              bt.soft['updata_' + status.advanced](false, data.pay);
               break;
           }
         })
@@ -4699,7 +4701,7 @@ var product_recommend = {
 // 消息通道/消息推送
 var ConfigIsPush = false;
 
-function open_three_channel_auth(stype){
+function open_three_channel_auth(stype,height){
   var _title = '设置消息通道',
       _area = '600px',
       isPush = false,
@@ -4719,18 +4721,36 @@ function open_three_channel_auth(stype){
     closeBtn: 2,
     shift: 5,
     shadeClose: false,
-    content: '<div class="bt-form alarm-view">\
-                      <div class="bt-w-main" >\
-                          <div class="bt-w-menu" '+(isPush?'style="width:160px"':'')+'></div>\
-                          <div class="bt-w-con pd15" '+(isPush?'style="margin-left:160px"':'')+'>\
-                              <div class="plugin_body">\
-                              </div>\
-                          </div>\
-                    </div>\
-              </div >',
+    content: '\
+		<div class="bt-form alarm-view">\
+			<div class="bt-w-main" >\
+				<div class="bt-w-menu" '+(isPush?'style="width:160px"':'')+'></div>\
+				<div class="bt-w-con pd15" '+(isPush?'style="margin-left:160px"':'')+'>\
+					<div class="plugin_body" '+(height?'style="'+height+'"':'')+'></div>\
+				</div>\
+			</div>\
+		</div >',
     success: function() {
       getMsgConfig(assign?assign:'');
     }
+  })
+}
+
+function getTemplateMsgConfig (item) {
+  $.post('/'+(ConfigIsPush?'push':'config')+'?action=get_module_template', {
+    module_name: item.name
+  }, function(res) {
+    if (res.status) {
+      $(".bt-w-main .plugin_body").html(res.msg.trim())
+
+      $(".bt-w-main .plugin_body").append('<div class="plugin_update" '+(ConfigIsPush?'style="width:738px"':'')+'><button class="btn btn-danger btn-sm" onclick="uninstallMsgModuleConfig()">卸载/禁用模块</button></div>')
+      if (item['version'] != item['info']['version']) {
+        $(".bt-w-main .plugin_body").append('<div class="plugin_update" style="width:408px" >【' + item['title'] + '】模块存在新的版本,为了不影响使用,请更新.<button class="btn btn-success btn-sm" onclick="installMsgModuleConfig()" >立即更新</button></div>')
+      }
+    } else {
+      $(".bt-w-main .plugin_body").html(shtml);
+    }
+    new Function(item.name + '.init()')()
   })
 }
 
@@ -4743,7 +4763,12 @@ function getMsgConfig(openType){
         _menu = ''
     $('.alarm-view .bt-w-menu').html('');
     $.each(rdata, function(index, item) {
-      _menu = $('<p class=\'men_' + item['name'] + '\'>' + item['title'] + '</p>').data('data', item)
+			var _default = item.data && item.data.default;
+			var _flag = '';
+			if (_default) {
+				_flag = '<span class="show-default"></span>'
+			}
+      _menu = $('<p class=\'men_' + item['name'] + '\'>' + item['title'] + _flag + '</p>').data('data', item)
       $('.alarm-view .bt-w-menu').append(_menu)
     });
     $('.alarm-view .bt-w-menu').append('<a style="position:absolute;bottom: 0;line-height: 40px;width:108px;text-align: center;" class="btlink" onclick="refreshThreeChannelAuth()">更新列表</a>')
@@ -4760,21 +4785,7 @@ function getMsgConfig(openType){
                             <p><button class="btn btn-success btn-sm mt1" onclick="installMsgModuleConfig(\''+ _item.name +'\')">安装模块</button></p>\
                      </div>'
       if (_item['setup']) {
-        $.post('/'+(ConfigIsPush?'push':'config')+'?action=get_module_template', {
-          module_name: _item['name']
-        }, function(res) {
-          if (res.status) {
-            $(".bt-w-main .plugin_body").html(res.msg)
-
-            $(".bt-w-main .plugin_body").append('<div class="plugin_update" '+(ConfigIsPush?'style="width:738px"':'')+'><button class="btn btn-danger btn-sm" onclick="uninstallMsgModuleConfig()">卸载模块</button></div>')
-            if (_item['version'] != _item['info']['version']) {
-              $(".bt-w-main .plugin_body").append('<div class="plugin_update" style="width:408px" >【' + _item['title'] + '】模块存在新的版本,为了不影响使用,请更新.<button class="btn btn-success btn-sm" onclick="installMsgModuleConfig()" >立即更新</button></div>')
-            }
-          } else {
-            $(".bt-w-main .plugin_body").html(shtml);
-          }
-          new Function(_item['name'] + '.init()')()
-        })
+        getTemplateMsgConfig(_item)
       } else {
         $(".bt-w-main .plugin_body").html(shtml);
       }
@@ -4789,14 +4800,13 @@ function getMsgConfig(openType){
       }
     }
   })
-
 }
 
 function installMsgModuleConfig (name) {
   var _api = '/config?action=install_msg_module'
   if(ConfigIsPush) _api = '/push?action=install_module'
-  console.log(this)
-  var _item = $(".bt-w-menu p.bgw.men_" +  name ).data('data');
+	name = name ? '.men_' + name : '';
+  var _item = $(".bt-w-menu p.bgw" +  name ).data('data');
   var spt = '安装'
   if (_item.setup) spt = '更新'
 
@@ -4811,8 +4821,8 @@ function installMsgModuleConfig (name) {
       shade: [0.3, '#000']
     });
     $.post(_api+'&name=' + _item.name + '', function(res) {
-      layer.close(loadT)
       getMsgConfig()
+      layer.close(loadT)
       layer.msg(res.msg, {
         icon: res.status ? 1 : 2
       })

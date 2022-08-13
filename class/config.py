@@ -1939,55 +1939,51 @@ class config:
         import file_execute_deny
         p = file_execute_deny.FileExecuteDeny()
         return p.del_file_deny(args)
+
     #查看告警
-    def get_login_send(self,get):
-        result={}
-        import time
-        time.sleep(0.01)
-        if os.path.exists('/www/server/panel/data/login_send_mail.pl'):
-            result['mail']=True
+    def get_login_send(self, get):
+        send_type = ""
+        if os.path.exists("/www/server/panel/data/login_send_type.pl"):
+            send_type = public.readFile("/www/server/panel/data/login_send_type.pl")
         else:
-            result['mail']=False
-        if os.path.exists('/www/server/panel/data/login_send_dingding.pl'):
-            result['dingding']=True
-        else:
-            result['dingding']=False
-        if result['mail'] or result['dingding']:
-            return public.returnMsg(True, result)
-        return public.returnMsg(False, result)
+            if os.path.exists('/www/server/panel/data/login_send_mail.pl'):
+                send_type = "mail"
+            if os.path.exists('/www/server/panel/data/login_send_dingding.pl'):
+                send_type = "dingding"
+        return public.returnMsg(True, send_type)
 
     #设置告警
     def set_login_send(self,get):
-        type=get.type.strip()
-        if type=='mail':
-            if not os.path.exists("/www/server/panel/data/login_send_mail.pl"):
-                os.mknod("/www/server/panel/data/login_send_mail.pl")
-            if os.path.exists("/www/server/panel/data/login_send_dingding.pl"):
-                os.remove("/www/server/panel/data/login_send_dingding.pl")
-            return public.returnMsg(True, '设置成功')
-        elif type=='dingding':
-            if not os.path.exists("/www/server/panel/data/login_send_dingding.pl"):
-                os.mknod("/www/server/panel/data/login_send_dingding.pl")
-            if os.path.exists("/www/server/panel/data/login_send_mail.pl"):
-                os.remove("/www/server/panel/data/login_send_mail.pl")
-            return public.returnMsg(True, '设置成功')
-        else:
+        login_send_type_conf = "/www/server/panel/data/login_send_type.pl"
+
+        set_type=get.type.strip()
+        msg_configs = self.get_msg_configs(get)
+        if set_type not in msg_configs.keys():
             return public.returnMsg(False,'不支持该发送类型')
 
+        from panelMessage import panelMessage
+        pm = panelMessage()
+        obj = pm.init_msg_module(set_type)
+        if not obj:
+            return public.returnMsg(False, "消息通道未安装。")
+
+        public.writeFile(login_send_type_conf, set_type)
+        return public.returnMsg(True, '设置成功')
+        
     #取消告警
     def clear_login_send(self,get):
         type = get.type.strip()
         if type == 'mail':
             if os.path.exists("/www/server/panel/data/login_send_mail.pl"):
                 os.remove("/www/server/panel/data/login_send_mail.pl")
-            return public.returnMsg(True, '取消成功')
         elif type == 'dingding':
             if os.path.exists("/www/server/panel/data/login_send_dingding.pl"):
                 os.remove("/www/server/panel/data/login_send_dingding.pl")
-            return public.returnMsg(True, '取消成功')
-        else:
-            return public.returnMsg(False, '不支持该发送类型')
 
+        login_send_type_conf = "/www/server/panel/data/login_send_type.pl"
+        if os.path.exists(login_send_type_conf):
+            os.remove(login_send_type_conf)
+        return public.returnMsg(True, '取消登录告警成功！')
 
     #告警日志
     def get_login_log(self,get):
@@ -2408,6 +2404,10 @@ class config:
                 print("兼容已有模块异常:")
                 print(e)
 
+            d_res = pm.get_default_channel(None)
+            default_channel = d_res["msg"]
+            # print("default channel: {}".format(default_channel))
+
             # 获取通道配置信息
             msgs = json.loads(public.readFile(cpath))
             for x in msgs:
@@ -2419,7 +2419,10 @@ class config:
                     obj =  pm.init_msg_module(x['name'])
                     if obj:
                         x['setup'] = True
-                        x['data'] = obj.get_config(None)
+                        c = obj.get_config(None)
+                        if default_channel and default_channel == key:
+                            c["default"] = True
+                        x['data'] = c 
                         x['info'] = obj.get_version_info(None);
                         if key == "sms":
                             if "version" in x['info'] and x['info']['version'] == "1.0":
@@ -2456,6 +2459,43 @@ class config:
         else:
             shtml = public.readFile(sfile)
             return public.returnMsg(True, shtml)
+
+    def set_default_channel(self,get):
+        """
+        设置默认消息通道
+        """
+        default_channel_pl = "/www/server/panel/data/default_msg_channel.pl"
+
+        new_channel = get.channel
+        default = False
+        if "default" in get:
+            _default = get.default
+            if not _default or _default in ["false"]:
+                default = False
+            else:
+                default = True
+
+        ori_default_channel = ""
+        if os.path.exists(default_channel_pl):
+            ori_default_channel = public.readFile(ori_default_channel)
+
+        if default:
+            # 设置为默认
+            from panelMessage import panelMessage
+            pm = panelMessage()
+            obj =  pm.init_msg_module(new_channel)
+            if not obj: return public.returnMsg(False, '设置失败，【{}】未安装'.format(new_channel))
+
+            public.writeFile(default_channel_pl, new_channel)
+            if ori_default_channel:
+                return public.returnMsg(True, '已成功将[{}]改为[{}]面板默认消息通道。'.format(ori_default_channel, new_channel))
+            else:
+                return public.returnMsg(True, '已设置[{}]为默认消息通道。'.format(new_channel))
+        else:
+            # 取消默认设置
+            if os.path.exists(default_channel_pl):
+                os.remove(default_channel_pl)
+            return public.returnMsg(True, "已取消[{}]作为面板默认消息通道。".format(new_channel))
 
     def set_msg_config(self,get):
         """
@@ -2508,4 +2548,8 @@ class config:
         panelPath = "/www/server/panel"
         sfile = '{}/class/msg/{}_msg.py'.format(panelPath,module_name)
         if os.path.exists(sfile): os.remove(sfile)
+        default_channel_pl = "/www/server/panel/data/default_msg_channel.pl"
+        default_channel = public.readFile(default_channel_pl)
+        if default_channel and default_channel == module_name:
+            os.remove(default_channel_pl)
         return public.returnMsg(True, '【{}】模块卸载成功'.format(module_name))

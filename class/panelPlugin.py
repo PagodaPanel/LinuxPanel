@@ -983,10 +983,14 @@ class panelPlugin:
                 else:
                     public.writeFile('data/v4.pl',' -4 ')
         sType = 0
+        qType = 0
         try:
             if hasattr(get,'type'): sType = int(get['type'])
             if hasattr(get,'query'):
-                if get.query: sType = 0
+                if get.query:
+                    qType = sType
+                    sType = 0
+
         except:pass
 
 
@@ -1010,6 +1014,7 @@ class panelPlugin:
                 public.total_keyword(get.query)
                 tmpList = []
                 for softInfo in softList['list']:
+                    if qType > 0 and softInfo['type'] != qType: continue
                     if softInfo['name'].lower().find(get.query) != -1 or \
                         softInfo['title'].lower().find(get.query) != -1 or \
                         softInfo['ps'].lower().find(get.query) != -1:

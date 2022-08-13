@@ -111,16 +111,29 @@ class ssh_security:
         return data
 
     ################## SSH 登陆报警设置 ####################################
-    def send_mail_data(self,title,body,type='mail'):
-        if type=='mail':
-            if self.__mail_config['user_mail']['user_name']:
-                if len(self.__mail_config['user_mail']['mail_list'])>=1:
-                    for i in self.__mail_config['user_mail']['mail_list']:
-                        self.__mail.qq_smtp_send(i, title, body)
-        elif type=='dingding':
-            if self.__mail_config['dingding']['dingding']:
-                self.__mail.dingding_send(title+body)
-        return True
+    def send_mail_data(self,title,body,type=None):
+        login_type = type
+        login_send_type_conf = "/www/server/panel/data/login_send_type.pl"
+        if not os.path.exists(login_send_type_conf):
+            if os.path.exists("/www/server/panel/data/login_send_mail.pl"):
+                login_type = "mail"
+
+            if os.path.exists("/www/server/panel/data/login_send_dingding.pl"):
+                login_type = "dingding"
+        
+        else:
+            login_type = public.readFile(login_send_type_conf)
+            if not login_type:
+                login_type = "mail"
+
+
+        from panelMessage import panelMessage
+        pm = panelMessage()
+        args = public.dict_obj()
+        args.channel = login_type
+        args.title = title
+        args.body = body
+        return pm.notify(args)
 
     #检测非UID为0的账户
     def check_user(self):

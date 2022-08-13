@@ -62,6 +62,10 @@ class ProjectController:
         else:
             pdata = args
 
+        if isinstance(pdata,dict): pdata =  public.to_dict_obj(pdata)
+
+        pdata.model_index = 'project'
+
         # 前置HOOK
         hook_index = '{}_{}_LAST'.format(mod_name.upper(),def_name.upper())
         hook_result = public.exec_hook(hook_index,pdata)

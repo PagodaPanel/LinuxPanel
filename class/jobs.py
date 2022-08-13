@@ -502,7 +502,14 @@ def files_set_mode():
         ["/dev/shm/session_py3","","root",600,True],
         ["/dev/shm/session_py2","","root",600,True],
         ["/www/server/phpmyadmin","","root",755,True],
-        ["/www/server/coll","","root",700,True]
+        ["/www/server/coll","","root",700,True],
+        ["/www/server/panel/init.sh","","root",600,False],
+        ["/www/server/panel/license.txt","","root",600,False],
+        ["/www/server/panel/requirements.txt","","root",600,False],
+        ["/www/server/panel/update.sh","","root",600,False],
+        ["/www/server/panel/default.pl","","root",600,False],
+        ["/www/server/panel/hooks","","root",600,True],
+        ["/www/server/panel/cache","","root",600,True]
     ]
 
     recycle_list = public.get_recycle_bin_list()
@@ -517,6 +524,9 @@ def files_set_mode():
         if m[1]:
             public.ExecShell("chown {U}:{U} {P}".format(P=m[0],U=m[2],R=rr[m[4]]))
             public.ExecShell("chmod {M} {P}".format(P=m[0],M=m[3],R=rr[m[4]]))
+
+    # 移除面板目录下所有文件的所属组、其它用户的写权限
+    public.ExecShell("chmod -R go-w /www/server/panel")
 
 #获取PMA目录
 def get_pma_path():

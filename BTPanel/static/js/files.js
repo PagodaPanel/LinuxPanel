@@ -2622,7 +2622,7 @@ var bt_file = {
           images: ['jpg', 'jpeg', 'png', 'bmp', 'gif', 'tiff', 'ico', 'JPG', 'webp'],
           compress: ['zip', 'rar', 'gz', 'war', 'tgz','tar', '7z'],
           video: ['mp4', 'mp3', 'mpeg', 'mpg', 'mov', 'avi', 'webm', 'mkv', 'mkv', 'mp3', 'rmvb', 'wma', 'wmv'],
-          ont_text: ['iso', 'xlsx', 'xls', 'doc', 'docx', 'tiff', 'exe', 'so', '7z', 'bz', 'dmg', 'apk', 'pptx', 'ppt', 'xlsb', 'pdf']
+          ont_text: ['iso', 'xlsx', 'xls', 'doc', 'docx', 'tiff', 'exe', 'so', 'bz', 'dmg', 'apk', 'pptx', 'ppt', 'xlsb', 'pdf']
         },
         returnVal = false;
     if (type != undefined) {
@@ -5405,7 +5405,8 @@ var bt_file = {
         list: [
           ['tar_gz', 'tar.gz (推荐)'],
           ['zip', 'zip (通用格式)'],
-          ['rar', 'rar (WinRAR对中文兼容较好)']
+          ['rar', 'rar (WinRAR对中文兼容较好)'],
+          ['7z', '7z (压缩率极高的压缩格式)']
         ]
       },
         { label: '压缩路径', id: 'compress_path', name: 'dfile', placeholder: '保存的文件名', value: data.path + '_' + bt.get_random(6) + '.' + (data.open == 'tar_gz' ? 'tar.gz' : data.open) }
@@ -5452,6 +5453,7 @@ var bt_file = {
             if (res.status) {
               that.render_present_task_list();
             }
+            bt_tools.msg(res)
             layer.close(loadT)
           })
         }

@@ -193,6 +193,9 @@ class main(databaseBase):
         @status int 0：关闭，1：开启
         """
 
+        if not public.process_exists("mongod") :
+            return public.returnMsg(False,"Mongodb服务还未开启！")
+
         status = int(get.status)
         path = '{}/data/mongo.root'.format(public.get_panel_path())
         if status:
@@ -601,9 +604,10 @@ class main(databaseBase):
         config = panelMongoDB().get_options(None)
         sa_path = '{}/data/mongo.root'.format(public.get_panel_path())
         if os.path.exists(sa_path):
-            config['root'] = public.readFile(sa_path)
+            config['msg'] = public.readFile(sa_path)
         else:
-            config['root'] = ''
+            config['msg'] = ''
+        config['root'] = config['msg']
         return config
 
     def get_database_size_by_id(self, args):

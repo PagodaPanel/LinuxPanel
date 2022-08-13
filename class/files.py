@@ -1559,17 +1559,71 @@ session.save_handler = files'''.format(path, sess_path, sess_path)
         except:
             return None
 
+    def is_max_size(self,path,max_size,max_num=10000,total_size=0,total_num=0):
+        '''
+            @name 是否超过最大大小
+            @path 文件路径
+            @max_size 最大大小
+            @max_num 最大文件数量
+            @return bool,total_size,total_num
+        '''
+        if not os.path.exists(path) or not max_size:
+            return False,total_size,total_num
+
+        # 是否为文件？
+        if os.path.isfile(path):
+            total_size = os.path.getsize(path)
+            total_num = 1
+            if total_size > max_size:
+                return True
+            return False,total_size,total_num
+
+        # 是否为目录？
+        for root, dirs, files in os.walk(path, topdown=True):
+            total_num += len(files)
+            total_num += len(dirs)
+            # 判断是否超过最大文件数量
+            if total_num > max_num:
+                return True,total_size,total_num
+
+            for f in files:
+                filename = os.path.normcase(root+os.path.sep+f)
+                if not os.path.exists(filename): continue
+                if os.path.islink(filename): continue
+                total_size += os.path.getsize(filename)
+
+            # 判断是否超过最大大小
+            if total_size > max_size:
+                return True,total_size,total_num
+
+        return False,total_size,total_num
+
+
     # 文件压缩
     def Zip(self, get):
         if not 'z_type' in get:
             get.z_type = 'rar'
 
         if get.z_type == 'rar':
-            if os.uname().machine == 'aarch64':
-                return public.returnMsg(False,'RAR组件不支持aarch64平台')
-
+            if os.uname().machine != 'x86_64':
+                return public.returnMsg(False,'RAR组件只支持x86_64平台')
         import panelTask
         task_obj = panelTask.bt_task()
+        max_size = 1024*1024*100
+        max_num = 10000
+        total_size = 0
+        total_num = 0
+        status = True
+        for file_name in get.sfile.split(','):
+            path = os.path.join(get.path,file_name)
+            status,total_size,total_num = self.is_max_size(path,max_size,max_num,total_size,total_num)
+            if not status: break
+
+        # 如果被压缩目标小于100MB或文件数量少于1W个，则直接在主线程压缩
+        if not status:
+            return task_obj._zip(get.path,get.sfile,get.dfile,'/tmp/zip.log',get.z_type)
+
+        # 否则在后台线程压缩
         task_obj.create_task('压缩文件', 3, get.path, json.dumps(
             {"sfile": get.sfile, "dfile": get.dfile, "z_type": get.z_type}))
         public.WriteLog("TYPE_FILE", 'ZIP_SUCCESS', (get.sfile, get.dfile))
@@ -1577,10 +1631,19 @@ session.save_handler = files'''.format(path, sess_path, sess_path)
 
     # 文件解压
     def UnZip(self, get):
+        if get.sfile[-4:] == '.rar':
+            if os.uname().machine != 'x86_64':
+                return public.returnMsg(False,'RAR组件只支持x86_64平台')
         import panelTask
         if not 'password' in get:
             get.password = ''
+        if not os.path.exists(get.sfile):
+            return public.returnMsg(False, '指定压缩包不存在!')
+        zip_size = os.path.getsize(get.sfile)
         task_obj = panelTask.bt_task()
+        if zip_size < 1024 * 1024 * 50:
+            return task_obj._unzip(get.sfile, get.dfile, get.password,"/tmp/unzip.log")
+
         task_obj.create_task('解压文件', 2, get.sfile, json.dumps(
             {"dfile": get.dfile, "password": get.password}))
         public.WriteLog("TYPE_FILE", 'UNZIP_SUCCESS', (get.sfile, get.dfile))

@@ -203,8 +203,13 @@ class panelSite(panelRedirect):
     }}
 
     #一键申请SSL证书验证目录相关设置
-    location ~ \.well-known{{
+    location ~ ^/.well-known/{{
         allow all;
+    }}
+
+    #禁止在证书验证目录放入敏感文件
+    if ( $uri ~ "^/\.well-known/.*\.(php|jsp|py|js|css|lua|ts|go|zip|tar\.gz|rar|7z|sql|bak)$" ) {{
+        return 403;
     }}
 
     location ~ .*\\.(gif|jpg|jpeg|png|bmp|swf)$

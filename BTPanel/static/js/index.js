@@ -741,23 +741,38 @@ var index = {
     var loadT = bt.load();
     bt.system.check_update(function (rdata) {
       loadT.close();
-      var data = rdata.msg, is_beta = data.is_beta, beta = data.beta, versionData = is_beta ? beta : data, versionType = is_beta?'测试版':'正式版'
-      bt.open({
+      if (rdata.status === false && typeof rdata.msg === 'string') {
+				try {
+					messagebox()
+				} catch (err) {}
+				layer.msg(rdata.msg, { icon: 2 });
+				return
+			}
+      var data = rdata.msg
+			var is_beta = data.is_beta
+			var beta = data.beta
+			var versionData = is_beta ? beta : data
+			var versionType = is_beta ? '测试版' : '正式版'
+			bt.open({
         type: 1,
         title: ' 版本更新-'+ bt.os + '面板' + versionType,
         area: '480px',
         shadeClose: false,
         skin: 'layui-layer-dialog',
         closeBtn: 2,
-        content: '<div class="setchmod bt-form">\
-              <div class="update_title"><i class="layui-layer-ico layui-layer-ico'+ (rdata.status?0:1) +'"></i><span>'+ (!rdata.status?'恭喜您，当前已经是最新版本':'发现新的面板版本，是否立即更新？') +'</span></div>\
-              '+ (function () {
-                if (!rdata.status) {
-                  return '<div class="update_version">当前版本：<a href="https://www.bt.cn/bbs/forum-36-1.html" target="_blank" class="btlink" title="查看当前版本日志">宝塔'+ bt.os + versionType + versionData.version + '</a>&nbsp;&nbsp;发布时间：' + versionData.uptime + '</div>'
-                }else{
-                  return '<div class="update_conter"><div class="update_version"><span style="width:60%;">最新版本：<a href="https://www.bt.cn/bbs/forum-36-1.html" target="_blank" class="btlink" title="查看版本更新日志">宝塔'+ bt.os + versionType +' '+ versionData.version + '</a></span><span style="text-align: right;width:40%;">更新日期：' + versionData.uptime + '</span></div><div class="update_logs">'+ versionData.updateMsg + '</div></div>'
-                }
-              })() + '\
+        content: '\
+				<div class="setchmod bt-form">\
+					<div class="update_title">\
+						<i class="layui-layer-ico layui-layer-ico'+ (rdata.status?0:1) +'"></i>\
+						<span>'+ (!rdata.status?'恭喜您，当前已经是最新版本':'发现新的面板版本，是否立即更新？') +'</span>\
+					</div>\
+					'+ (function () {
+						if (!rdata.status) {
+							return '<div class="update_version">当前版本：<a href="https://www.bt.cn/bbs/forum-36-1.html" target="_blank" class="btlink" title="查看当前版本日志">宝塔'+ bt.os + versionType + versionData.version + '</a>&nbsp;&nbsp;发布时间：' + versionData.uptime + '</div>'
+						}else{
+							return '<div class="update_conter"><div class="update_version"><span style="width:60%;">最新版本：<a href="https://www.bt.cn/bbs/forum-36-1.html" target="_blank" class="btlink" title="查看版本更新日志">宝塔'+ bt.os + versionType +' '+ versionData.version + '</a></span><span style="text-align: right;width:40%;">更新日期：' + versionData.uptime + '</span></div><div class="update_logs">'+ versionData.updateMsg + '</div></div>'
+						}
+					})() + '\
               <div class="update_conter">\
                   <div class="update_tips">'+ (is_beta?'正式版':'测试版') + '最新版本为：&nbsp;' + (is_beta?data.version:beta.version) + '&nbsp;&nbsp;&nbsp;更新时间:&nbsp;&nbsp;' + (is_beta?data.uptime:beta.uptime) + '&nbsp;&nbsp;&nbsp;\
                   '+ (!is_beta ? '<span>如需更新测试版请点击<a href="javascript:;" onclick="index.beta_msg()" class="btlink btn_update_testPanel">查看详情</a></span>' : '<span>如需切换回正式版请点击<a href="javascript:;" onclick="index.to_not_beta()" class="btlink btn_update_testPanel">切换到正式版</a></span>') + '\

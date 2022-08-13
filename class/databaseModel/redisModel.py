@@ -297,6 +297,8 @@ class main(databaseBase):
                 item['len'] = redis_obj.strlen(key)
             except:
                 item['len'] = len(item['val'])
+            item['val'] = public.xssencode(item['val'])
+            item['name'] = public.xssencode(item['name'])
             rdata['data'].append(item)
             idx += 1
         return rdata

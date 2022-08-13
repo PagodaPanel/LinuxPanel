@@ -511,8 +511,6 @@ class ajax:
             return ""
 
 
-
-
     def UpdatePanel(self,get):
         try:
             if not public.IsRestart(): return public.returnMsg(False,'EXEC_ERR_TASK')
@@ -556,10 +554,12 @@ class ajax:
             #检查是否需要升级
             if not hasattr(get,'toUpdate'):
                 if updateInfo['is_beta'] == 1:
-                    if public.version_to_tuple(updateInfo['beta']['version']) <= public.version_to_tuple(session['version']): return public.returnMsg(False,updateInfo)
+                    if public.version_to_tuple(updateInfo['beta']['version']) > public.version_to_tuple(session['version']): return public.returnMsg(True,updateInfo)
                 else:
-                    if public.version_to_tuple(updateInfo['version']) <= public.version_to_tuple(session['version']): return public.returnMsg(False,updateInfo)
+                    if public.version_to_tuple(updateInfo['version']) > public.version_to_tuple(session['version']): return public.returnMsg(True,updateInfo)
 
+                    if updateInfo['version'] != session['version']:
+                        return public.returnMsg(True,updateInfo)
 
             #是否执行升级程序
             if(updateInfo['force'] == True or hasattr(get,'toUpdate') == True or os.path.exists('data/autoUpdate.pl') == True):
@@ -582,12 +582,6 @@ class ajax:
                 public.writeFile('data/restart.pl','True')
                 return public.returnMsg(True,'PANEL_UPDATE',(updateInfo['version'],))
 
-            #输出新版本信息
-            data = {
-                'status' : True,
-                'version': updateInfo['version'],
-                'updateMsg' : updateInfo['updateMsg']
-            }
             # 输出忽略的版本
             updateInfo['ignore'] = []
             no_path = '{}/data/no_update.pl'.format(public.get_panel_path())
@@ -597,7 +591,7 @@ class ajax:
                 except:
                     pass
             public.ExecShell('rm -rf /www/server/phpinfo/*')
-            return public.returnMsg(True,updateInfo)
+            return public.returnMsg(False,updateInfo)
         except Exception as ex:
             return public.get_error_info()
 

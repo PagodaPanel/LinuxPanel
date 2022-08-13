@@ -197,7 +197,7 @@ var crontab = {
       value: 'localhost',
       list: backupListAll,
       change: function (formData, element, that) {
-        if (formData.sType && formData.sType !== 'enterpriseBackup') {
+        if (that.data.sType!=='enterpriseBackup' && formData.sType !== 'enterpriseBackup') {
           that.config.form[3].group[4].value = formData.backupTo;
           that.config.form[3].group[5].value = formData.save;
           that.config.form[3].group[6].display = formData.backupTo !== "localhost" ? true : false;
@@ -656,6 +656,7 @@ var crontab = {
    */
    getAllDatabases: function (callback){
     $.post('project/binlog/get_databases', function (res) {
+      allDatabases = []
       if (res.length == 0) {
         allDatabases = [{title:'当前没有数据库',value:''}]
       }else{
@@ -673,7 +674,7 @@ var crontab = {
    */
   getAllTables: function (param, callback) {
     $.post('project/binlog/get_tables', {db_name: param} , function (res) {
-      var data = []
+      var data = [],allTables = []
       for (let i = 0; i < res.length; i++) {
         data.push({title:res[i].name,value:res[i].name})
       }
@@ -901,20 +902,22 @@ var crontab = {
               var arry = [],db_result,t_result
               arry = row.urladdress.split("|")
               if(row.sType === 'enterpriseBackup'){
-                crontab.getAllTables(arry[0],function(res) {
-                  db_result = allDatabases.some(item=>{
-                    if (item.value === arry[0]) {
-                      return true
-                    }
-                  })
-                  if(arry[1] !== ''){
-                    t_result = allTables.some(item=>{
-                      if (item.value === arry[1]) {
+                crontab.getAllDatabases(function (rdata) {
+                  crontab.getAllTables(arry[0],function(res) {
+                    db_result = allDatabases.some(item=>{
+                      if (item.value === arry[0]) {
                         return true
                       }
                     })
-                  }
-                  edit()
+                    if(arry[1] !== ''){
+                      t_result = allTables.some(item=>{
+                        if (item.value === arry[1]) {
+                          return true
+                        }
+                      })
+                    }
+                    edit()
+                  })
                 })
               }else{
                 edit()
@@ -1000,12 +1003,16 @@ var crontab = {
                             formConfig[3].group[3].display = true
                           }
                           if (!db_result) {
-                            formConfig[3].group[2].value = '数据库不存在'
-                            formConfig[3].group[2].list.push({title:'数据库不存在',value:'数据库不存在'})
+                            formConfig[3].group[2].placeholder = '数据库不存在'
                           }
                           if (!t_result) {
-                            formConfig[3].group[3].value = '表不存在'
-                            formConfig[3].group[3].list.push({title:'表不存在',value:'表不存在'})
+                            formConfig[3].group[3].placeholder = '表不存在'
+                            var none_db = formConfig[3].group[3].list.some(item=>{
+                              if (item.value === '') {
+                                return true
+                              }
+                            })
+                            if (none_db) formConfig[3].group[3].list = []
                           }
                           formConfig[3].group[1].disabled = true
                           formConfig[6].display = false
@@ -1130,8 +1137,8 @@ var crontab = {
                               cron_id : row.id,
                               backup_id : arry[2]
                             }
-                            if($('select[name=datab_name').val().indexOf('不存在') > -1) return layer.msg('数据库['+ arry[0] +']不存在',{icon:2})
-                            if($('select[name=tables_name').length) if($('select[name=tables_name').val().indexOf('不存在') > -1) return layer.msg('表['+ arry[1] +']不存在',{icon:2})
+                            if($('select[name=datab_name').parent().find('.bt_select_content').text().indexOf('不存在') > -1) return layer.msg('数据库['+ arry[0] +']不存在',{icon:2})
+                            if($('select[name=tables_name').length) if($('select[name=tables_name').parent().find('.bt_select_content').text().indexOf('不存在') > -1) return layer.msg('表['+ arry[1] +']不存在',{icon:2})
                           }else{
                             if($('select[name=sName').length){
                               params.name.match(/\[(.*)]/)

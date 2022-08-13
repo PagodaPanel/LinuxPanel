@@ -58,7 +58,9 @@ $('#cutMode .tabs-item').on('click', function () {
   bt.set_cookie('site_model', type);
 });
 
+var node_table = null
 var site = {
+  model_table: null,
   scan_list:[],//漏洞扫描
   scan_num:0,
   span_time:'',
@@ -310,6 +312,7 @@ var site = {
                 bt.msg({ status: false, msg: '项目端口不能为空' })
                 return false
               }
+              if (parseInt(data.port) < 0 || parseInt(data.port) > 65535) return layer.msg('项目端口号应为[0-65535]',{icon:2})
               if (data.project_script === '') {
                 data.project_script = project_script_two.val()
                 delete data.project_script_two
@@ -374,6 +377,7 @@ var site = {
             bt.msg({ status: false, msg: '项目端口不能为空' })
             return false
           }
+          if (parseInt(form.port) < 0 || parseInt(form.port) > 65535) return layer.msg('项目端口号应为[0-65535]',{icon:2})
           if (form.project_script === null) {
             bt.msg({ status: false, msg: '请选择项目目录，获取启动命令！' })
             return false
@@ -686,6 +690,7 @@ var site = {
                   row['project_config'] = $.extend(row, data);
                   row['path'] = data.project_script;
                   row['ps'] = data.ps;
+                  node_table.$refresh_table_list(true);
                 }
                 bt.msg({ status: res.status, msg: res.data })
                 site.node.simulated_click(0)
@@ -1313,7 +1318,7 @@ var site = {
   },
   node_porject_view: function () {
     $('#bt_node_table').empty();
-    var node_table = bt_tools.table({
+    node_table = bt_tools.table({
       el: '#bt_node_table',
       url: '/project/nodejs/get_project_list',
       minWidth: '1000px',
@@ -1736,7 +1741,7 @@ var site = {
         },{
           title: '操作',
           type: 'group',
-          width: 180,
+          width: 190,
           align: 'right',
           group: (function(){
             var setConfig = [{
@@ -1764,7 +1769,9 @@ var site = {
                       event:function(row){
                         if(item.name === 'total'){ // 仅linux系统单独判断
                           if(!item.isBuy){
-                            product_recommend.recommend_product_view(item)
+                            product_recommend.recommend_product_view(item, {
+															imgArea: ['800px', '576px']
+														})
                           }else if(!item.install){
                             bt.soft.install(item.name)
                           }else{
@@ -1775,7 +1782,9 @@ var site = {
                             },500)
                           }
                         }else{
-                          product_recommend.get_version_event(item,row.name)
+                          product_recommend.get_version_event(item,row.name, {
+														imgArea: ['840px', '606px']
+													})
                         }
                       }
                     })
@@ -4113,6 +4122,8 @@ var site = {
         bt.msg(rdata);
         if (rdata.status) {
           site.reload(7);
+          if(site.model_table) site.model_table.$refresh_table_list(true);
+          if(node_table) node_table.$refresh_table_list(true);
           if (ssl_id != undefined) {
             setTimeout(function () {
               $('#ssl_tabs span:eq(' + ssl_id + ')').click();
@@ -5452,6 +5463,7 @@ var site = {
                     css: 'btn-success',
                     callback: function (rdata, load, callback) {
                       var name = rdata.tempname;
+                      if(name === '') return layer.msg('模板名称不能为空！',{icon:2})
                       var isSameName = false;
                       for (var i = 0; i < arrs.length; i++) {
                         if (arrs[i].value == name) {
@@ -6949,7 +6961,7 @@ var site = {
             tableFixed("site_exclude_path");
           }
         },{
-          title:'保护目录',
+          title:'保护文件/扩展名',
           callback:function(robj){
             robj.append('<div><div class="anti_rule_add">\
             <input style="display:none;" id="select-safe" value="'+file_path+'" />\
@@ -8606,6 +8618,8 @@ var site = {
                   csr: csr
                 }, function (ret) {
                   if (ret.status) site.reload(7);
+                  if(site.model_table) site.model_table.$refresh_table_list(true);
+                  if(node_table) node_table.$refresh_table_list(true);
                   bt.msg(ret);
                 })
               }
@@ -10718,7 +10732,7 @@ var site = {
                     align: 'right',
                     title: '操作',
                     templet: function (item) {
-                      var opt = '<a class="btlink" onclick="bt.site.set_cert_ssl(\'' + item.subject + '\',\'' + web.name + '\',function(rdata){if(rdata.status){site.ssl.reload(2);}})" href="javascript:;">部署</a> | ';
+                      var opt = '<a class="btlink" onclick="bt.site.set_cert_ssl(\'' + item.subject + '\',\'' + web.name + '\',function(rdata){if(rdata.status){site.ssl.reload(2);if(site.model_table){site.model_table.$refresh_table_list(true);}if(node_table){node_table.$refresh_table_list(true);}}})" href="javascript:;">部署</a> | ';
                       opt += '<a class="btlink" onclick="bt.site.remove_cert_ssl(\'' + item.subject + '\',function(rdata){if(rdata.status){site.ssl.reload(4);}})" href="javascript:;">删除</a>'
                       return opt;
                     }

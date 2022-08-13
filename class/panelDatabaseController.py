@@ -41,16 +41,6 @@ class DatabaseController:
         mod_name = "{}Model".format(args['mod_name'].strip())
         def_name = args['def_name'].strip()
 
-        # # 指定模型是否存在
-        # mod_file = "{}/databaseModel/{}.py".format(public.get_class_path(),mod_name)
-        # if not os.path.exists(mod_file):
-        #     return public.return_status_code(1003,mod_name)
-        # # 实例化
-        # def_object = public.get_script_object(mod_file)
-        # if not def_object: return public.return_status_code(1000,'没有找到{}模型'.format(mod_name))
-        # run_object = getattr(def_object.main(),def_name,None)
-
-        # if not run_object: return public.return_status_code(1000,'没有在{}模型中找到{}方法'.format(mod_name,def_name))
         if not hasattr(args,'data'): args.data = {}
         if args.data:
             if isinstance(args.data,str):
@@ -64,6 +54,10 @@ class DatabaseController:
                 pdata = args.data
         else:
             pdata = public.dict_obj()
+
+
+        if isinstance(pdata,dict): pdata =  public.to_dict_obj(pdata)
+        pdata.model_index = 'database'
 
         # 前置HOOK
         hook_index = '{}_{}_LAST'.format(mod_name.upper(),def_name.upper())

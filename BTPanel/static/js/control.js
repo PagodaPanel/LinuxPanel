@@ -88,7 +88,9 @@ var controlObj = {
         var e = (new Date($(this).parent().find(".etime").val()).getTime()) / 1000;
         b = Math.round(b);
         e = Math.round(e);
-        eval('that.' + $(this).attr('data-type') + '(' + b + ',' + e + ')');
+        var type = $(this).attr('data-type')
+        var callback = that[type]
+        if (callback) callback(b, e);
       });
     },
 
@@ -864,7 +866,7 @@ var controlObj = {
 
     // 系统负载
     getload: function (b, e) {
-      var that = this;
+      var that = controlObj.conTrolView;
       $.get('/ajax?action=get_load_average&start=' + b + '&end=' + e, function (rdata) {
         that.set_data(rdata, b, e);
         var myChartgetload = echarts.init(document.getElementById('getloadview'));
@@ -1002,11 +1004,12 @@ var controlObj = {
         {
           scale: true,
           name: '资源使用率',
-          boundaryGap: [0, '100%'],
           min: 0,
           max: function (value) {
+            // 最大值超过100
+            if (value.max >= 100) return Math.ceil(value.max);
             // 最大值超过80
-            if(value.max == 100 || (value.max + 20 > 100)) return 100;
+            if (value.max >= 80) return 100;
             // 小于80取当前最大值的首位数字
             return parseInt((value.max + 10).toString().slice(0,1) + '0')
           },

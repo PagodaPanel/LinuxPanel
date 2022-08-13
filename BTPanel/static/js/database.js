@@ -1349,7 +1349,7 @@ var database = {
                               if(formData.backup_cycle == '') return layer.msg("备份周期不能为空！")
                               if(formData.backup_cycle < 0) return layer.msg("备份周期不能小于0！")
                               if(formData.backup_type == 'tables'){
-                                if(formData.table_name == '0') return layer.msg("当前数据库下没有表，不能添加")
+                                if(formData.table_name == '') return layer.msg("当前数据库下没有表，不能添加")
                               }else{
                                 delete formData['table_name']
                               }
@@ -1679,17 +1679,13 @@ backupLogs: function (row, index, ev, key, that) {
         }
       }
       table()
-      var selectDbList = []
-      for (var i = 0; i < database.databaseName.length; i++) {
-        selectDbList.push({title: database.databaseName[i].name+' '+ (database.databaseName[i].cron_id == null ? '[无备份任务]':''),value: database.databaseName[i].name})
-      }
       $('#dbbackup_list .tootls_group.tootls_top .pull-right').prepend('\
       <div class="selects_conter">\
         <span class="select_text">数据库</span>\
         <div class="select_conter">\
         <span style="display: none;" class="database_hide_value"></span>\
         <input type="text" placeholder="请选择" autocomplete="off" class="inbox_input database_input"\
-            name="inbox_input" style="border: none;" value="'+ res +'">\
+            name="inbox_input" style="border: none;" value="'+ (res ? res : '') +'">\
         <ul class="database_list" id="database_select_list"></ul>\
         <span class="select_down"></span>\
       </div>\
@@ -1701,9 +1697,9 @@ backupLogs: function (row, index, ev, key, that) {
             database_default = $(this).prev(),
             html = '';
         _list.siblings().removeClass('active')
-        for (var i = 0; i < database.databaseName.length; i++) {
-          var item = database.databaseName[i]
-          html += '<li '+ (_that.val() == item.name ? 'class="active"': '') + '>'+ item.name + '</li>'
+        for (var i = 0; i < arry1.length; i++) {
+          var item = arry1[i]
+          html += '<li '+ (_that.val() == item.value ? 'class="active"': '') + '>'+ item.value + '</li>'
         }
         $('.database_list').html(html)
         database_list.width($(this)[0].clientWidth);
@@ -1733,16 +1729,16 @@ backupLogs: function (row, index, ev, key, that) {
 			})
       $('.select_conter input').on('input', function (e) {
         var html = '',_that = $(this)
-        for (var i = 0; i < database.databaseName.length; i++) {
-          var item = database.databaseName[i]
+        for (var i = 0; i < arry1.length; i++) {
+          var item = arry1[i]
           if (_that.val() != '') {
-            if (item.name.indexOf(_that.val()) > -1) {
-              html += '<li '+ (_that.val() == item.name ? 'class="active"': '') + '>'+ item.name + '</li>'
+            if (item.value.indexOf(_that.val()) > -1) {
+              html += '<li '+ (_that.val() == item.value ? 'class="active"': '') + '>'+ item.value + '</li>'
             }else{
               html += ''
             }
           }else{
-            html += '<li>' + item.name + '</li>'
+            html += '<li>' + item.value + '</li>'
           }
           $('.database_list').html(html)
         }
@@ -2267,7 +2263,7 @@ backupLogs: function (row, index, ev, key, that) {
                   formData['cron_type'] = 'hour-n'
                   formData['backup_type'] = type === 0 ? 'databases' : 'tables'
                   if(formData.backup_type == 'tables'){
-                    if(formData.table_name == '0') return layer.msg("当前数据库下没有表，不能添加")
+                    if(formData.table_name == '') return layer.msg("当前数据库下没有表，不能添加")
                   }else{
                     delete formData['table_name']
                   }

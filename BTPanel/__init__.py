@@ -823,7 +823,7 @@ def config(pdata=None):
     'user_mail_send', 'get_user_mail', 'set_dingding', 'get_dingding', 'get_settings', 'user_stmp_mail_send',
     'user_dingding_send','get_login_send','set_login_send','set_empty','clear_login_send','get_login_log','login_ipwhite',
     'set_ssl_verify','get_ssl_verify','get_password_config','set_password_expire','set_password_safe',"get_msg_configs",
-    "get_module_template","install_msg_module", "uninstall_msg_module", "set_msg_config"
+    "get_module_template","install_msg_module", "uninstall_msg_module", "set_msg_config", "set_default_channel"
     )
     return publicObject(config.config(), defs, None, pdata)
 
@@ -1605,7 +1605,6 @@ def panel_hook():
 @app.route('/install', methods=method_all)
 def install():
     # 初始化面板接口
-    if not session.get('login',None): return public.error_not_login()
     if not os.path.exists('install.pl'): return redirect('/login')
     if public.M('config').where("id=?", ('1',)).getField('status') == 1:
         if os.path.exists('install.pl'): os.remove('install.pl')

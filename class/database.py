@@ -541,8 +541,11 @@ SetLink
         users = panelMysql.panelMysql().query("select Host from mysql.user where User='" + username + "' AND Host!='localhost'")
         if isinstance(users,str):
             return public.returnMsg(False,'删除失败,连接数据库失败!')
-        for us in users:
-            panelMysql.panelMysql().execute("drop user '" + username + "'@'" + us[0] + "'")
+        try:
+            for us in users:
+                panelMysql.panelMysql().execute("drop user '" + username + "'@'" + us[0] + "'")
+        except:
+            pass
         panelMysql.panelMysql().execute("flush privileges")
         rPath = '/www/.Recycle_bin/'
         data['rmtime'] = int(time.time())
@@ -573,20 +576,36 @@ SetLink
             if public.M('databases').where("name=?",( data['name'],)).count():
                 os.remove(filename)
                 return public.returnMsg(True,'DEL_SUCCESS')
-            result = panelMysql.panelMysql().execute("drop database `" + data['name'] + "`")
+        else:
+            if os.path.exists(filename):
+                data = json.loads(public.readFile(filename + '/config.json'))
+            else:
+                return public.returnMsg(False,'指定数据库回收目录不存在!')
+
+        db_obj = panelMysql.panelMysql()
+        if self.database_exists_for_mysql(db_obj,data['name']):
+            u_name = self.db_name_to_unicode(data['name'])
+            datadir = public.get_datadir()
+            db_path = '{}/{}'.format(datadir,u_name)
+            if not os.path.exists(db_path):
+                os.makedirs(db_path)
+                public.ExecShell("chown mysql:mysql {}".format(db_path))
+            result = db_obj.execute("drop database `" + data['name'] + "`")
             isError=self.IsSqlError(result)
             if  isError != None: return isError
-            panelMysql.panelMysql().execute("drop user '" + data['username'] + "'@'localhost'")
-            users = panelMysql.panelMysql().query("select Host from mysql.user where User='" + data['username'] + "' AND Host!='localhost'")
+            db_obj.execute("drop user '" + data['username'] + "'@'localhost'")
+            users = db_obj.query("select Host from mysql.user where User='" + data['username'] + "' AND Host!='localhost'")
             for us in users:
-                panelMysql.panelMysql().execute("drop user '" + data['username'] + "'@'" + us[0] + "'")
-            panelMysql.panelMysql().execute("flush privileges")
+                db_obj.execute("drop user '" + data['username'] + "'@'" + us[0] + "'")
+            db_obj.execute("flush privileges")
+
+
+        if os.path.isfile(filename):
             os.remove(filename)
         else:
             import shutil
-            if os.path.exists(filename):
-                data = json.loads(public.readFile(filename + '/config.json'))
-                shutil.rmtree(filename)
+            shutil.rmtree(filename)
+
         try:
             public.WriteLog("TYPE_DATABASE", 'DATABASE_DEL_SUCCESS',(data['name'],))
         except:

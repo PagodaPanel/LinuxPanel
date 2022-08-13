@@ -155,7 +155,7 @@ class site_push:
                 return public.returnMsg(False,"SSL一天推送一次，跳过.")
 
             ssl_list = []
-            project_type = ''
+
             sql = public.M('sites')
             if data['project'] == 'all':
 
@@ -171,6 +171,7 @@ class site_push:
                 #所有正常网站
                 web_list =  sql.where('status=1',()).select()
                 for web in web_list:
+                    project_type = ''
                     if web in n_list: continue
 
                     if not web['project_type'] in ['PHP']:
@@ -181,6 +182,7 @@ class site_push:
                         info['siteName'] = web['name']
                         ssl_list.append(info)
             else:
+                project_type = ''
                 find = sql.where('name=? and status=1',(data['project'],)).find()
                 if not find: return public.returnMsg(False,"没有可用的站点.")
 
