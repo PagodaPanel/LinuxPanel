@@ -1385,7 +1385,8 @@ class ajax:
     #取指定行
     def get_lines(self,args):
         if not os.path.exists(args.filename): return public.returnMsg(False,'指定日志文件不存在!')
-        s_body = public.ExecShell("tail -n {} {}".format(args.num,args.filename))[0]
+        num = args.get('num/d',10)
+        s_body = public.GetNumLines(args.filename,num)
         return public.returnMsg(True,s_body)
 
     def log_analysis(self,get):

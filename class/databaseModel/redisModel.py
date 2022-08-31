@@ -271,7 +271,10 @@ class main(databaseBase):
         idx = 0
         for key in slist:
             item = {}
-            item['name'] = key.decode()
+            try:
+                item['name'] = key.decode()
+            except:
+                item['name'] = str(key)
 
             item['endtime'] = redis_obj.ttl(key)
             if item['endtime'] == -1: item['endtime'] = 0

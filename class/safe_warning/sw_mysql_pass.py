@@ -5,49 +5,42 @@
 # -------------------------------------------------------------------
 # Copyright (c) 2015-2099 宝塔软件(http://bt.cn) All rights reserved.
 # -------------------------------------------------------------------
-# Author: linxiao
+# Author: lkq <lkq@bt.cn>
+# -------------------------------------------------------------------
+# Time: 2022-08-10
+# -------------------------------------------------------------------
+# Mysql 弱口令检测
 # -------------------------------------------------------------------
 
-# -------------------------------------------------------------------
-# FTP弱口令检测
-# -------------------------------------------------------------------
-# import sys, os
-# os.chdir('/www/server/panel')
-# sys.path.append("class/")
-import os,public
-
-_title = 'FTP服务弱口令检测'
-_version = 2.0  # 版本
-_ps = "检测已启用的FTP服务弱口令"  # 描述
+import  public, os
+_title = 'Mysql 弱口令检测'
+_version = 1.0  # 版本
+_ps = "Mysql 弱口令检测"  # 描述
 _level = 3  # 风险级别： 1.提示(低)  2.警告(中)  3.危险(高)
-_date = '2022-08-12'  # 最后更新时间
-_ignore = os.path.exists("data/warning/ignore/sw_ftp_pass.pl")
+_date = '2022-8-10'  # 最后更新时间
+_ignore = os.path.exists("data/warning/ignore/sw_mysql_pass.pl")
 _tips = [
-    "请到【FTP】页面修改FTP密码",
-    "注意：请不要使用过于简单的帐号密码，以免造成安全隐患",
-    "推荐使用高安全强度的密码：分别包含数字、大小写、特殊字符混合，且长度不少于7位。",
-    "使用【Fail2ban防爆破】插件对FTP服务进行保护"
+    "如果检测出为弱口令请及时修改密码"
 ]
-
 _help = ''
 
 
 def check_run():
-    """检测FTP弱口令
-        @author linxiao<2020-9-19>
-        @return (bool, msg)
-    """
-
+    '''
+        @name Mysql 弱口令检测
+        @time 2022-08-12
+        @author lkq@bt.cn
+    '''
     pass_info = public.ReadFile("/www/server/panel/config/weak_pass.txt")
     if not pass_info: return True, '无风险'
     pass_list = pass_info.split('\n')
-    data = public.M("ftps").select()
-    ret = ""
+    data=public.M("databases").select()
+    ret=""
     for i in data:
         if i['password'] in pass_list:
-            ret += "FTP：" + i['name'] + "存在弱口密码：" + i['password'] + "\n"
+            ret+="数据库："+i['name']+"存在弱口密码："+i['password']+"\n"
     if ret:
-        # print(ret)
         return False, ret
     else:
         return True, '无风险'
+

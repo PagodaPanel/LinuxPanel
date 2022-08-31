@@ -420,7 +420,7 @@ class backup:
 
     #备份所有数据库
     def backup_database_all(self,save = 3):
-        databases = public.M('databases').field('name').select()
+        databases = public.M('databases').where("type=?","MySQL").field('name').select()
         self._backup_all = True
         failture_count = 0
         results = []

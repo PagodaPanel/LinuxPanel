@@ -132,7 +132,7 @@ class ssh_security:
         args = public.dict_obj()
         args.channel = login_type
         args.title = title
-        args.body = body
+        args.msg = body
         return pm.notify(args)
 
     #检测非UID为0的账户
@@ -210,7 +210,7 @@ class ssh_security:
     #登陆的情况下
     def login(self):
         self.check_files()
-        if not self.__mail_config['user_mail']['user_name']:return False
+        # if not self.__mail_config['user_mail']['user_name']:return False
         self.check_user()
         self.__ip_data = json.loads(public.ReadFile(self.__ClIENT_IP))
         ip=self.get_ip()

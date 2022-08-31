@@ -203,7 +203,7 @@ class panelSite(panelRedirect):
     }}
 
     #一键申请SSL证书验证目录相关设置
-    location ~ ^/.well-known/{{
+    location ~ \.well-known{{
         allow all;
     }}
 
@@ -2689,7 +2689,11 @@ listener SSL443 {
         for dname in data['binding']:
             _path = os.path.join(path,dname['path'])
             if not os.path.exists(_path):
-                dname['path'] += '<a style="color:red;"> >> 错误: 目录不存在</a>'
+                _path = _path.replace(run_path,'')
+                if not os.path.exists(_path):
+                    dname['path'] += '<a style="color:red;"> >> 错误: 目录不存在</a>'
+                else:
+                    dname['path'] = '../' + dname['path']
         return data
 
     #添加子目录绑定
@@ -2716,6 +2720,10 @@ listener SSL443 {
 
         webdir = root_path + '/' + dirName
         webdir = webdir.replace('//','/').strip()
+        if not os.path.exists(webdir): # 如果在运行目录找不到指定子目录，尝试到根目录查找
+            root_path = siteInfo['path']
+            webdir = root_path + '/' + dirName
+            webdir = webdir.replace('//','/').strip()
 
         sql = public.M('binding')
         if sql.where("domain=?",(domain,)).count() > 0: return public.returnMsg(False, 'SITE_ADD_ERR_DOMAIN_EXISTS')
@@ -2949,7 +2957,7 @@ server
         if(public.get_webserver() != 'nginx'):
             filename = site['path']+'/'+find['path']+'/.htaccess'
         else:
-            filename = self.setupPath + '/panel/vhost/rewrite/'+site['name']+'_'+find['path']+'.conf'
+            filename = self.setupPath + '/panel/vhost/rewrite/'+site['name']+'_'+find['path'].replace('/','_')+'.conf'
 
         if hasattr(get,'add'):
             public.writeFile(filename,'')
@@ -2959,7 +2967,7 @@ server
                 domain = find['domain']
                 rep = "\n#BINDING-"+domain+"-START(.|\n)+BINDING-"+domain+"-END"
                 tmp = re.search(rep, conf).group()
-                dirConf = tmp.replace('rewrite/'+site['name']+'.conf;', 'rewrite/'+site['name']+'_'+find['path']+'.conf;')
+                dirConf = tmp.replace('rewrite/'+site['name']+'.conf;', 'rewrite/'+site['name']+'_'+find['path'].replace('/','_')+'.conf;')
                 conf = conf.replace(tmp, dirConf)
                 public.writeFile(file,conf)
         data = {}
@@ -3763,6 +3771,8 @@ RewriteRule ^%s(.*)$ http://%s/$1 [P,E=Proxy-Host:%s]
             nocheck = get.nocheck
         except:
             nocheck = ""
+        if not get.get('proxysite',None):
+            return public.returnMsg(False, '目标URL不能为空')
         if not nocheck:
             if self.__CheckStart(get,"create"):
                 return self.__CheckStart(get,"create")
@@ -3835,6 +3845,8 @@ RewriteRule ^%s(.*)$ http://%s/$1 [P,E=Proxy-Host:%s]
 
     # 修改反向代理
     def ModifyProxy(self, get):
+        if not get.get('proxysite',None):
+            return public.returnMsg(False, '目标URL不能为空')
         proxyname_md5 = self.__calc_md5(get.proxyname)
         ap_conf_file = "{p}/panel/vhost/apache/proxy/{s}/{n}_{s}.conf".format(
         p=self.setupPath, s=get.sitename, n=proxyname_md5)
@@ -4025,6 +4037,17 @@ RewriteRule ^%s(.*)$ http://%s/$1 [P,E=Proxy-Host:%s]
         ap_file = self.setupPath + "/panel/vhost/apache/" + sitename + ".conf"
         p_conf = self.__read_config(self.__proxyfile)
         random_string = public.GetRandomString(8)
+
+        # websocket前置map
+        map_file = self.setupPath + "/panel/vhost/nginx/0.websocket.conf"
+        if not os.path.exists(map_file):
+            map_body = '''map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''  close;
+}
+'''
+            public.writeFile(map_file,map_body)
+
         # 配置Nginx
         # 构造清理缓存连接
 
@@ -4061,6 +4084,9 @@ location ^~ %s
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header REMOTE-HOST $remote_addr;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    # proxy_hide_header Upgrade;
 
     add_header X-Cache $upstream_cache_status;
 

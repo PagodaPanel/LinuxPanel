@@ -11,6 +11,7 @@
 # | 消息提醒
 # +-------------------------------------------------------------------
 import time
+import json
 import public
 try:
     from BTPanel import cache
@@ -80,7 +81,8 @@ class panelMessage:
             @author hwliang <2020-05-18>
             @return list
         '''
-        public.run_thread(self.get_cloud_messages,args=(args,))
+        if not public.is_aarch():
+            public.run_thread(self.get_cloud_messages,args=(args,))
         data = public.M('messages').where('state=? and expire>?',(1,int(time.time()))).order("id desc").select()
         return data
 
@@ -215,7 +217,7 @@ class panelMessage:
             return eval('msg_main.{}_msg()'.format(module));
         except:
             return None
-    
+
     def get_default_channel(self, args=None):
         """获取面板默认消息通道
         Returns:
@@ -231,12 +233,12 @@ class panelMessage:
         """发送通知
 
         Args:
-            args (dict): 
+            args (dict):
             title: 消息标题
             msg: 消息内容
-            channel: 消息通道 
+            channel: 消息通道
         """
-        
+
         msg = ""
         if "msg" in args:
             body = args.msg
@@ -244,7 +246,7 @@ class panelMessage:
         if "title" in args:
             title = args.title
         sm_type = None
-        if "sm_type" in args: 
+        if "sm_type" in args:
             sm_type = args.sm_type
         sm_args = {}
         if "sm_args" in args:
@@ -258,11 +260,11 @@ class panelMessage:
             else:
                 channels = [channel]
         if not channel:
-            channel = self.get_default_channel()
-            channels = [channel]
+            channel_res = self.get_default_channel()
+            if "msg" in channel_res:
+                channels = [channel_res["msg"]]
         if not channels:
-            return False 
-
+            return False
         try:
             from config import config
             c = config()
@@ -290,12 +292,15 @@ class panelMessage:
                     if not sm_type: continue
                     msg_data["sm_type"] = sm_type
                     msg_data["sm_args"] = sm_args
-                channel_data[ch] = msg_data
+                if not msg_data:
+                    channel_data[ch] = args.__dict__
             # print("channel data:")
             # print(channel_data)
             # 即时推送
+
             from panelPush import panelPush
             pp = panelPush()
+            error_count = 0
             push_res = pp.push_message_immediately(channel_data)
             if push_res["status"]:
                 channel_res = push_res["msg"]
@@ -304,12 +309,8 @@ class panelMessage:
                         if ch in msg_channels:
                             error_channel.append(msg_channels[ch]["title"])
                             error_count +=1
-            if not push_res["status"] or error_count:
-                self.echo_error("消息通道:{} 发送失败！".format(",".join(error_channel)))
-            else:
-                self.echo_info("消息发送成功。")
             if error_count == len(channels):
                 return False
             return True
-        except:
+        except Exception as e:
             return False

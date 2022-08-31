@@ -358,6 +358,43 @@ class acme_v2:
         index = self.save_order(s_json, index)
         return index
 
+    def get_site_run_path_byid(self,site_id):
+        '''
+            @name 通过site_id获取网站运行目录
+            @author hwliang
+            @param site_id<int> 网站标识
+            @return None or string
+        '''
+        if public.M('sites').where('id=? and project_type=?', (site_id, 'PHP')).count()>=1:
+            site_path = public.M('sites').where('id=?',site_id).getField('path')
+            if not site_path: return None
+            if not os.path.exists(site_path): return None
+            args = public.dict_obj()
+            args.id = site_id
+            import panelSite
+            run_path = panelSite.panelSite().GetRunPath(args)
+            if run_path in ['/']: run_path = ''
+            site_run_path = os.path.join(site_path,run_path)
+            if not os.path.exists(site_run_path): return site_path
+            return site_run_path
+        else:
+            return False
+
+    def get_site_run_path(self,domains):
+        '''
+            @name 通过域名列表获取网站运行目录
+            @author hwliang
+            @param domains<list> 域名列表
+            @return None or string
+        '''
+        site_id = 0
+        for domain in domains:
+            site_id = public.M('domain').where("name=?",domain).getField('pid')
+            if site_id: break
+
+        if not site_id: return None
+        return self.get_site_run_path_byid(site_id)
+
     # 获取验证信息
     def get_auths(self, index):
         if not index in self._config['orders']:
@@ -368,6 +405,9 @@ class acme_v2:
             # 检查授权信息是否过期
             if time.time() < self._config['orders'][index]['auths'][0]['expires']:
                 return self._config['orders'][index]['auths']
+
+        site_run_path = self.get_site_run_path(self._config['orders'][index]['domains'])
+        if site_run_path: self._config['orders'][index]['auth_to'] = site_run_path
 
         #清理旧验证
         self.claer_auth_file(index)
@@ -397,6 +437,7 @@ class acme_v2:
             identifier_auth['expires'] = s_body['expires']
             identifier_auth['auth_to'] = self._config['orders'][index]['auth_to']
             identifier_auth['type'] = self._config['orders'][index]['auth_type']
+
             # 设置验证信息
             self.set_auth_info(identifier_auth)
             auths.append(identifier_auth)
@@ -1312,6 +1353,7 @@ fullchain.pem       粘贴到证书输入框
 
     # 申请证书 - api
     def apply_cert_api(self, args):
+        if not 'id' in args: return public.returnMsg(False,'网站id不能为空!')
         # 是否为指定站点
         if public.M('sites').where('id=? and project_type=?', (args.id, 'Java')).count() or public.M('sites').where('id=? and project_type=?', (args.id, 'Go')).count() or public.M('sites').where('id=? and project_type=?', (args.id, 'Other')).count():
                 project_info = public.M('sites').where('id=?', (args.id,)).getField('project_config')

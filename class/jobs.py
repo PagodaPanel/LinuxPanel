@@ -246,6 +246,25 @@ def control_init():
     null_html()
     remove_other()
     show_docker()
+    deb_bashrc()
+
+def deb_bashrc():
+    '''
+        @name 针对debian/ubuntu未调用bashrc导致的问题
+        @author hwliang
+        @return void
+    '''
+    bashrc = '/root/.bashrc'
+    bash_profile = '/root/.bash_profile'
+    apt_get = '/usr/bin/apt-get'
+    if not os.path.exists(apt_get): return
+    if not os.path.exists(bashrc): return
+    if not os.path.exists(bash_profile): return
+
+    profile_body = public.readFile(bash_profile)
+    if not isinstance(profile_body,str): return
+    if profile_body.find('.bashrc') == -1:
+        public.writeFile(bash_profile,'source ~/.bashrc\n' + profile_body.strip() + "\n")
 
 
 def show_docker():

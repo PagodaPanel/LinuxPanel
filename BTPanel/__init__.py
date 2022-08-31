@@ -29,7 +29,7 @@ from flask_session import Session
 from flask_compress import Compress
 
 
-cache = SimpleCache()
+cache = SimpleCache(5000)
 import public
 
 # 初始化Flask应用
@@ -561,7 +561,7 @@ def ssh_security(pdata=None):
     firewallObject = ssh_security.ssh_security()
     defs = ('san_ssh_security', 'set_password', 'set_sshkey', 'stop_key', 'get_config',
             'stop_password', 'get_key', 'return_ip', 'add_return_ip', 'del_return_ip', 'start_jian', 'stop_jian',
-            'get_jian', 'get_logs','set_root','stop_root','start_auth_method','stop_auth_method','get_auth_method','check_so_file','get_so_file','get_pin')
+            'get_jian', 'get_logs','set_root','stop_root','start_auth_method','stop_auth_method','get_auth_method','check_so_file','get_so_file','get_pin','set_login_send','get_login_send','get_msg_push_list','clear_login_send')
     return publicObject(firewallObject, defs, None, pdata)
 
 
@@ -663,6 +663,19 @@ def project(mod_name,def_name):
     if comReturn: return comReturn
     from panelProjectController import ProjectController
     project_obj = ProjectController()
+    defs = ('model',)
+    get = get_input()
+    get.action = 'model'
+    get.mod_name = mod_name
+    get.def_name = def_name
+    return publicObject(project_obj,defs,None,get)
+
+@app.route('/msg/<mod_name>/<def_name>', methods=method_all)
+def msgcontroller(mod_name,def_name):
+    comReturn = comm.local()
+    if comReturn: return comReturn
+    from MsgController import MsgController
+    project_obj = MsgController()
     defs = ('model',)
     get = get_input()
     get.action = 'model'
@@ -823,7 +836,7 @@ def config(pdata=None):
     'user_mail_send', 'get_user_mail', 'set_dingding', 'get_dingding', 'get_settings', 'user_stmp_mail_send',
     'user_dingding_send','get_login_send','set_login_send','set_empty','clear_login_send','get_login_log','login_ipwhite',
     'set_ssl_verify','get_ssl_verify','get_password_config','set_password_expire','set_password_safe',"get_msg_configs",
-    "get_module_template","install_msg_module", "uninstall_msg_module", "set_msg_config", "set_default_channel"
+    "get_module_template","install_msg_module", "uninstall_msg_module", "set_msg_config", "set_default_channel","get_msg_fun","get_msg_configs_by","get_msg_push_list"
     )
     return publicObject(config.config(), defs, None, pdata)
 

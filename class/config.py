@@ -2553,3 +2553,77 @@ class config:
         if default_channel and default_channel == module_name:
             os.remove(default_channel_pl)
         return public.returnMsg(True, '【{}】模块卸载成功'.format(module_name))
+
+
+
+    def get_msg_fun(self,get):
+        """
+        @获取消息模块指定方法
+        @auther: cjxin
+        @date: 2022-08-16
+        @param: get.module_name 消息模块名称(如：sms,weixin,dingding)
+        @param: get.fun_name 消息模块方法名称(如：send_sms,push_msg)
+        """
+        module_name = get.module_name
+        fun_name = get.fun_name
+
+        m_objs = public.init_msg(module_name)
+        if not m_objs: return public.returnMsg(False, '设置失败，【{}】未安装'.format(module_name))
+
+        return getattr(m_objs,fun_name)(get)
+
+
+    def get_msg_configs_by(self,get):
+        """
+        @name 获取单独消息通道配置
+        @auther: cjxin
+        @date: 2022-08-16
+        @param: get.name 消息模块名称(如：sms,weixin,dingding)
+        """
+        name = get.name
+        res = {}
+        res['data'] = {}
+        res['setup'] = False
+        res['info'] = False
+        try:
+            obj =  public.init_msg(name)
+            if obj:
+                res['setup'] = True
+                res['data'] = obj.get_config(None)
+                res['info'] = obj.get_version_info(None);
+        except: pass
+        return res
+
+
+    def get_msg_push_list(self,get):
+        """
+        @name 获取消息通道配置列表
+        @auther: cjxin
+        @date: 2022-08-16
+        """
+        cpath = 'data/msg.json'
+        try:
+            if 'force' in get or not os.path.exists(cpath):
+                if not 'download_url' in session: session['download_url'] = public.get_url()
+                public.downloadFile('{}/linux/panel/msg/msg.json'.format(session['download_url']),cpath)
+        except : pass
+
+        data = {}
+        if os.path.exists(cpath):
+            msgs = json.loads(public.readFile(cpath))
+
+            for x in msgs:
+                x['setup'] = False
+                x['info'] = False
+                key = x['name']
+                try:
+                    obj =  public.init_msg(x['name'])
+                    if obj:
+                        x['setup'] = True
+                        x['info'] = obj.get_version_info(None);
+
+                except :
+                    print(public.get_error_info())
+                    pass
+                data[key] = x
+        return data

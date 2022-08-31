@@ -10,7 +10,7 @@
 #--------------------------------
 # 宝塔公共库
 #--------------------------------
-import json,os,sys,time,re,socket,importlib,binascii,base64,string
+import json,os,sys,time,re,socket,importlib,binascii,base64,string,psutil
 _LAN_PUBLIC = None
 _LAN_LOG = None
 _LAN_TEMPLATE = None
@@ -748,9 +748,8 @@ def checkInput(data):
 #取文件指定尾行数
 def GetNumLines(path,num,p=1):
     pyVersion = sys.version_info[0]
-    max_len = 1024*128
+    max_len = 1024*1024*10
     try:
-        from cgi import html
         if not os.path.exists(path): return ""
         start_line = (p - 1) * num
         count = start_line + num
@@ -788,7 +787,7 @@ def GetNumLines(path,num,p=1):
                     fp.seek(-to_read, 1)
                     t_buf = fp.read(to_read)
                     if pyVersion == 3:
-                        t_buf = t_buf.decode('utf-8')
+                        t_buf = t_buf.decode('utf-8',errors='ignore')
 
                     buf = t_buf + buf
                     fp.seek(-to_read, 1)
@@ -3578,21 +3577,24 @@ def check_ip_white(path,ip):
 
 #登陆告警
 def login_send_body(is_type,username,login_ip,port):
+    send_type = "mail"
 
+    panel_path = get_panel_path()
     login_send_type_conf = "/www/server/panel/data/login_send_type.pl"
     if os.path.exists(login_send_type_conf):
         send_type = readFile("/www/server/panel/data/login_send_type.pl")
-        if not send_type:
+    if not send_type:
+        login_send_mail = "{}/data/login_send_mail.pl".format(panel_path)
+        login_send_dingding = "{}/data/login_send_dingding.pl".format(panel_path)
+        if os.path.exists(login_send_mail):
             send_type = "mail"
+        if os.path.exists(login_send_dingding):
+            send_type = "dingding"
 
-    login_send_mail = "{}/data/login_send_mail.pl".format(get_panel_path())
-    send_login_white = '{}/data/send_login_white.json'.format(get_panel_path())
-    login_send_dingding = "{}/data/login_send_dingding.pl".format(get_panel_path())
-    if os.path.exists(login_send_mail):
+    if not send_type:
         send_type = "mail"
-    if os.path.exists(login_send_dingding):
-        send_type = "dingding"
 
+    send_login_white = '{}/data/send_login_white.json'.format(panel_path)
     if check_ip_white(send_login_white,login_ip):return False
     if send_type == "mail":
         send_mail("堡塔登录提醒","堡塔登录提醒：您的服务器"+get_ip()+"通过"+is_type+"登录成功，账号："+username+"，登录IP："+login_ip+":"+port+"，登录时间："+time.strftime('%Y-%m-%d %X',time.localtime()), True)
@@ -4367,7 +4369,7 @@ def error_not_login(e = None,_src = None):
 
 def error_403(e):
     from BTPanel import Response,session
-    if not session.get('login',None): return error_not_login()
+    # if not session.get('login',None): return error_not_login()
     errorStr = '''<html>
 <head><title>403 Forbidden</title></head>
 <body>
@@ -4382,7 +4384,7 @@ def error_403(e):
 
 def error_404(e):
     from BTPanel import Response,session
-    if not session.get('login',None): return error_not_login()
+    # if not session.get('login',None): return error_not_login()
     errorStr = '''<html>
 <head><title>404 Not Found</title></head>
 <body>
@@ -4967,6 +4969,27 @@ def is_domain(domain):
     if re.match(reg, domain): return True
     return False
 
+
+def init_msg(module):
+    """
+    初始化消息通道
+    @module 消息通道模块名称
+    """
+    import os, sys
+    if not os.path.exists('class/msg'): os.makedirs('class/msg')
+    panelPath = get_panel_path()
+
+    sfile = 'class/msg/{}_msg.py'.format(module)
+    if not os.path.exists(sfile): return False
+    sys.path.insert(0, "{}/class/msg".format(panelPath))
+
+    msg_main = __import__('{}_msg'.format(module))
+    try:
+        mod_reload(msg_main)
+    except:
+        pass
+    return eval('msg_main.{}_msg()'.format(module));
+
 def push_argv(msg):
     """
     @处理短信参数，否则会被拦截
@@ -5240,3 +5263,158 @@ ufw reload
     return False
 
 
+def is_aarch():
+    '''
+        @name 是否是arm架构
+        @author hwliang
+        @return bool
+    '''
+    uname = None
+    if hasattr(os,'uname'): uname = os.uname()
+    aarch_list = ['aarch64','aarch']
+    try:
+        return uname.machine in aarch_list
+    except:
+        if uname:
+            return uname[-1] in aarch_list
+    return False
+
+
+
+def is_process_exists_by_cmdline(_cmd):
+        '''
+            @name 根据命令行参数查找进程是否存在
+            @author hwliang
+            @param _cmd 命令行
+            @return bool
+        '''
+        if isinstance(_cmd,str):
+            _cmd = [_cmd]
+        if not isinstance(_cmd,list):
+            return False
+        for pid in psutil.pids():
+            try:
+                p = psutil.Process(pid)
+                cmd_line = p.cmdline()
+                for _c in _cmd:
+                    if _c in cmd_line:
+                        return True
+            except:
+                continue
+        return False
+
+def is_process_exists_by_exe(_exe):
+    '''
+        @name 根据执行文件路径查找进程是否存在
+        @author hwliang
+        @param _exe 命令行
+        @return bool
+    '''
+    if isinstance(_exe,str):
+        _exe = [_exe]
+    if not isinstance(_exe,list):
+        return False
+    for pid in psutil.pids():
+        try:
+            p = psutil.Process(pid)
+            _exe_bin = p.exe()
+            for _e in _exe:
+                if _exe_bin == _e: return True
+        except:
+            continue
+    return False
+
+def is_process_exists_by_name(_name):
+    '''
+        @name 根据进程名查找进程是否存在
+        @author hwliang
+        @param _name 命令行
+        @return bool
+    '''
+    if isinstance(_name,str):
+        _name = [_name]
+    if not isinstance(_name,list):
+        return False
+    for pid in psutil.pids():
+        try:
+            p = psutil.Process(pid)
+            name = p.name()
+            for _n in _name:
+                if name == _n: return True
+        except:
+            continue
+    return False
+
+
+def is_mysql_process_exists():
+    '''
+        @name 检查mysql进程是否存在
+        @author hwliang
+        @return bool
+    '''
+    _exe = ['/www/server/mysql/bin/mysqld_safe','/www/server/mysql/bin/mariadbd','/www/server/mysql/bin/mysqld']
+    return is_process_exists_by_exe(_exe)
+
+def is_redis_process_exists():
+    '''
+        @name 检查redis进程是否存在
+        @author hwliang
+        @return bool
+    '''
+    _exe = ['/www/server/redis/src/redis-server']
+    return is_process_exists_by_exe(_exe)
+
+def is_pure_ftpd_process_exists():
+    '''
+        @name 检查pure-ftpd进程是否存在
+        @author hwliang
+        @return bool
+    '''
+    _exe = ['/www/server/pure-ftpd/sbin/pure-ftpd']
+    return is_process_exists_by_exe(_exe)
+
+def is_php_fpm_process_exists(name):
+    '''
+        @name 检查php-fpm进程是否存在
+        @author hwliang
+        @return bool
+    '''
+    _php_version = name.split('-')[-1]
+    _exe = ['/www/server/php/{}/sbin/php-fpm'.format(_php_version)]
+    return is_process_exists_by_exe(_exe)
+
+def is_nginx_process_exists():
+    '''
+        @name 检查nginx进程是否存在
+        @author hwliang
+        @return bool
+    '''
+    _exe = ['/www/server/nginx/sbin/nginx']
+    return is_process_exists_by_exe(_exe)
+
+def is_httpd_process_exists():
+    '''
+        @name 检查httpd进程是否存在
+        @author hwliang
+        @return bool
+    '''
+    _exe = ['/www/server/apache/bin/httpd']
+    return is_process_exists_by_exe(_exe)
+
+def is_memcached_process_exists():
+    '''
+        @name 检查memcached进程是否存在
+        @author hwliang
+        @return bool
+    '''
+    _exe = ['/usr/local/memcached/bin/memcached']
+    return is_process_exists_by_exe(_exe)
+
+def is_mongodb_process_exists():
+    '''
+        @name 检查mongodb进程是否存在
+        @author hwliang
+        @return bool
+    '''
+    _exe = ['/www/server/mongodb/bin/mongod']
+    return is_process_exists_by_exe(_exe)

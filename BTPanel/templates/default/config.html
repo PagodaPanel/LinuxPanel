@@ -4,7 +4,7 @@
 <div class="main-content">
   <div class="container-fluid" style="padding-bottom:54px">
     <div class="pos-box bgw mtb15 radius4" >
-      <div class="tab-list" id="configTab" style="display: flex; justify-content: space-between;">
+      <div class="flex tab-list" id="configTab" style="justify-content: space-between;">
 				<div class="flex">
 					<div class="tabs-item" data-type="allConfig">全部设置</div>
 					<div class="tabs-item" data-type="baseConfig">基础设置</div>
@@ -12,10 +12,10 @@
 					<div class="tabs-item" data-type="securityConfig">安全设置</div>
 					<div class="tabs-item" data-type="pushConfig">通知设置</div>
 				</div>
-				<div class="search">
-					<input type="text" id="search-val" class="ser-text pull-left" placeholder="搜索设置" />
+				<form class="search">
+					<input type="text" id="search-val" name="search_keyword" class="ser-text pull-left" placeholder="搜索设置" />
 					<button type="button" class="ser-sub pull-left" id="search-btn"></button>
-				</div>
+				</form>
       </div>
     </div>
     <div class="setbox bgw mtb15 tab-view-box configure-box">

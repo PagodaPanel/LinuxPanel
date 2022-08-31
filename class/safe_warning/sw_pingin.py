@@ -15,12 +15,12 @@
 
 import os,sys,re,public
 
-_title = 'ICMP检测'
-_version = 2.0                              # 版本
-_ps = "检测是否禁止ICMP协议访问服务器(禁Ping)"              # 描述
-_level = 2                                  # 风险级别： 1.提示(低)  2.警告(中)  3.危险(高)
-_date = '2022-08-05'                        # 最后更新时间
-_ignore = os.path.exists("data/warning/ignore/sw_ping.pl")
+_title = '2222222'
+_version = 1.0                              # 版本
+_ps = "222222222(禁Ping)"              # 描述
+_level = 0                                  # 风险级别： 1.提示(低)  2.警告(中)  3.危险(高)
+_date = '2020-08-05'                        # 最后更新时间
+_ignore = os.path.exists("data/warning/ignore/sw_ping_in.pl")
 _tips = [
     "在【安全】页面中开启【禁Ping】功能",
     "注意：开启后无法通过ping通服务器IP或域名，请根据实际需求设置"

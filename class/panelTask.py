@@ -391,7 +391,7 @@ class bt_task:
             pass_opt = ""
             if password:
                 pass_opt = '-p"{}"'.format(password)
-            public.ExecShell('7z x "{}" -o"{}" -y {} &> {}'.format(sfile,dfile,pass_opt,log_file))
+            public.ExecShell('{} x "{}" -o"{}" -y {} &> {}'.format(_7zbin,sfile,dfile,pass_opt,log_file))
         else:
             public.ExecShell("gunzip -c " + sfile + " > " + sfile[:-3])
 
