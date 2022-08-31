@@ -22,6 +22,7 @@ sed -i "s/http:\/\/download.bt.cn\/install\/public.sh/http:\/\/cdn.jsdelivr.net\
 wget -O $name.sh $serverUrl/$mtype/$name.sh
 sed -i 's|\\cp -rpa|echo skipped #\\cp -rpa|' $name.sh
 #sed -i '/Tpublic.sh/d' $name.sh
+sed -i 's|wget -O ${checkFile}|echo skipped #wget -O ${checkFile}|' $name.sh
 
 if [ "$actionType" == 'install' ];then
 	bash lib.sh
