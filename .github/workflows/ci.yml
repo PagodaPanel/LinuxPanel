@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - '7.9.3'
+      - 'dev'
 
 jobs:
   build:
@@ -26,8 +26,8 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          name: 'PagodaPanel v7.9.3'
-          tag_name: "v7.9.3"
+          name: 'PagodaPanel v7.9.3 beta'
+          tag_name: "beta"
           files: |
             ../install.zip
             ../update.zip
